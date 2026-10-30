@@ -418,7 +418,7 @@
     const id = location.hash.slice(1);
     const t = tracks.find(t => t.id === id);
     if (t) showTrack(t);
-    // a section with no tracks yet (Adventure for now) falls back to the main page
+    // an unknown or empty section (old #adventure links) falls back to the main page
     else showOverview(tracks.some(t => t.category === id) ? id : main.id);
   }
   window.addEventListener("hashchange", route);
