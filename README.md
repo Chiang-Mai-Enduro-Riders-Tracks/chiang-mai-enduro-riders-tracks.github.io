@@ -1,4 +1,4 @@
-# Chiang Mai Community Tracks
+# Chiang Mai Enduro X Riders Tracks
 
 Beginner-friendly enduro GPX routes around Chiang Mai, by Pavel & Jul.
 Site: unlisted (noindex); only people with the link find it.
