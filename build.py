@@ -374,7 +374,8 @@ def main():
             "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category")],
             "flags": flags(fields),
             "history": history,
-            "notesUpdated": notes_hist[-1] if notes_hist else (seed.get("notes") or [None])[-1],
+            # notes changes are shown without a name: the notes are Pavel and Jul's, whoever typed the edit
+            "notesUpdated": {k: v for k, v in (notes_hist[-1] if notes_hist else (seed.get("notes") or [{}])[-1] or {}).items() if k != "by"} or None,
             **st,
         })
 
@@ -396,7 +397,7 @@ def main():
         what = ", ".join(next((t["name"] for t in tracks if t["id"] == i), i) for i in ids)
         if "tracks/NOTES.txt" in files:
             what = (what + ", track notes") if what else "Track notes"
-        changes.append({**c, "what": what or "Site text", "track": ids[0] if len(ids) == 1 else None})
+        changes.append({**{k: v for k, v in c.items() if k != "by"}, "what": what or "Site text", "track": ids[0] if len(ids) == 1 else None})
     changes.sort(key=lambda c: c.get("when", c["date"]), reverse=True)
 
     if os.path.isdir(OUT):
