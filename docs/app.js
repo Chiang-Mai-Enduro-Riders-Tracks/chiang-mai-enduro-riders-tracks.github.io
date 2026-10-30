@@ -42,11 +42,15 @@
   });
   const allBounds = L.latLngBounds(tracks.flatMap(t => t.line));
   // A map fitted while its box still has no size zooms all the way in; wait for layout first.
-  const fitAll = () => {
+  let fitTimer = null;
+  const fitTo = (bounds, pad) => {
+    clearTimeout(fitTimer);
     map.invalidateSize();
-    if (!map.getSize().y) return void setTimeout(fitAll, 100);
-    map.fitBounds(allBounds, { padding: [24, 24] });
+    const size = map.getSize();
+    if (size.x < 100 || size.y < 100) { fitTimer = setTimeout(() => fitTo(bounds, pad), 100); return; }
+    map.fitBounds(bounds, { padding: [pad, pad] });
   };
+  const fitAll = () => fitTo(allBounds, 24);
   fitAll();
 
   function highlight(id, on) {
@@ -112,7 +116,6 @@
       l.casing.setStyle({ opacity: 0.55 });
       l.start.setStyle({ opacity: 1, fillOpacity: 1 });
     }
-    map.invalidateSize();
     fitAll();
   }
 
@@ -195,8 +198,7 @@
     if (window.innerWidth <= 820) window.scrollTo({ top: 0 });
 
     drawProfile(t);
-    map.invalidateSize();
-    map.fitBounds(L.latLngBounds(t.line), { padding: [30, 30] });
+    fitTo(L.latLngBounds(t.line), 30);
   }
 
   // ---------- rider updates → emailed to Pavel by the Google Apps Script in apps-script/ ----------

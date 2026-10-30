@@ -31,7 +31,7 @@ Build warnings (name mismatches, km differences, missing elevation) print to the
 
 ## One-time GitHub setup
 
-1. Create a free GitHub organisation (e.g. `cnx-community-tracks`); invite Pavel, Jul and Gareth as **Owners**.
+1. Organisation: `Chiang-Mai-Enduro-Riders-Tracks` (site repo `chiang-mai-enduro-riders-tracks.github.io`). Invite editors as **Owners**.
 2. Create a **public** repo in it (Pages on free plans needs public) and push this folder.
 3. Repo → Settings → Pages → Deploy from a branch → `main` / `/docs`.
 4. Repo → Settings → Actions → General → Workflow permissions → **Read and write**.
