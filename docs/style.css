@@ -112,6 +112,11 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 .back { background: none; border: 0; color: var(--accent); font: inherit; padding: 0; cursor: pointer; margin-bottom: 10px; }
 .detail-head h2 { font-size: 21px; margin: 2px 0 6px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.apphelp {
+  margin: -6px 0 12px; padding: 10px 12px; font-size: 13px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+}
+.apphelp ul { margin: 6px 0 0; padding-left: 18px; }
 .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
 .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
 .fact span { display: block; font-size: 12px; color: var(--muted); }

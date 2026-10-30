@@ -135,8 +135,11 @@
       <div class="actions">
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
+        <button class="btn" data-app="gaia">Open in Gaia</button>
+        <button class="btn" data-app="locus">Open in Locus</button>
         <button class="btn" id="copy">Copy link</button>
       </div>
+      <div id="appHelp" class="apphelp" hidden></div>
       <div class="facts">
         <div class="fact"><span>Distance</span><b>${t.km} km</b></div>
         <div class="fact"><span>Climbing (est.)</span><b>${t.climb != null ? "≈" + t.climb + " m" : "—"}</b></div>
@@ -157,12 +160,56 @@
       try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; }
       catch { $("copy").textContent = "Copy failed"; }
     };
+    document.querySelectorAll("[data-app]").forEach(b => b.onclick = () => openInApp(t, b.dataset.app));
     document.querySelector(".panel").scrollTop = 0;
     if (window.innerWidth <= 820) window.scrollTo({ top: 0 });
 
     drawProfile(t);
     map.invalidateSize();
     map.fitBounds(L.latLngBounds(t.line), { padding: [30, 30] });
+  }
+
+  // Neither app has a public "open this link" address, so hand the GPX file to Android's share
+  // sheet (the rider taps Gaia GPS or Locus Map). Where the browser can't share files, download
+  // it and show the import steps for that app instead.
+  const APPS = {
+    gaia: {
+      name: "Gaia GPS",
+      steps: ["Open the downloaded file from the notification or the Files app and choose <b>Gaia GPS</b>.",
+        "Or in Gaia: <b>Saved</b> → <b>⋮</b> → <b>Import File</b> → pick the file in Downloads."],
+    },
+    locus: {
+      name: "Locus Map",
+      steps: ["Open the downloaded file from the notification or the Files app and choose <b>Locus Map</b>.",
+        "Or in Locus: <b>Import</b> → <b>Remote file</b> → paste. The track's link is already copied."],
+    },
+  };
+
+  async function openInApp(t, key) {
+    const app = APPS[key];
+    const url = new URL("gpx/" + encodeURIComponent(t.file), location.href).href;
+    const help = $("appHelp");
+    try {
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], t.file, { type: "application/gpx+xml" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: t.name });
+        help.hidden = false;
+        help.innerHTML = `In the list that opened, tap <b>${app.name}</b>.`;
+        return;
+      }
+    } catch (e) {
+      if (e.name === "AbortError") return; // rider closed the share sheet
+    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = t.file;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    if (key === "locus") { try { await navigator.clipboard.writeText(url); } catch {} }
+    help.hidden = false;
+    help.innerHTML = `<b>GPX downloaded.</b> To open it in ${app.name}:<ul>${app.steps.map(s => `<li>${s}</li>`).join("")}</ul>`;
   }
 
   function drawProfile(t) {
