@@ -169,16 +169,18 @@
     map.fitBounds(L.latLngBounds(t.line), { padding: [30, 30] });
   }
 
-  // Chrome on Android won't share .gpx files with other apps (not on its Web Share allowlist), so on
-  // Android each button sends an intent link straight to that app. If the app isn't installed or
-  // won't take the link, Chrome loads the fallback: this page with ?noapp=<app>, which shows the
-  // manual steps. Other devices get the download plus the steps.
+  // Chrome on Android won't share .gpx files with other apps (not on its Web Share allowlist).
+  // Locus accepts an intent link straight from the page; if it isn't installed, Chrome loads the
+  // fallback (this page with ?noapp=locus), which shows the manual steps.
+  // Gaia ignores every link from a web page (tested 10/30 on Android: intent links, gaiagps.com,
+  // gaiagps://), but it is offered in Android's "Open with" list for a downloaded GPX, so its
+  // button downloads the file and says to open it with Gaia. Apps without `pkg` work that way.
   const APPS = {
     gaia: {
       name: "Gaia GPS",
-      pkg: "com.trailbehind.android.gaiagps.pro",
-      steps: ["Open the downloaded file from the notification or the Files app and choose <b>Gaia GPS</b>.",
-        "Or in Gaia: <b>Saved</b> → <b>⋮</b> → <b>Import File</b> → pick the file in Downloads."],
+      steps: ["Tap <b>Open</b> on the download message (or open the file from <b>Downloads</b>).",
+        "Choose <b>Gaia GPS</b>. Leave “Remember my choice” off if you also use Locus.",
+        "No Open button? In Gaia: <b>Saved</b> → <b>⋮</b> → <b>Import File</b> → pick the file in Downloads."],
     },
     locus: {
       name: "Locus Map",
@@ -209,7 +211,7 @@
   function openInApp(t, key) {
     const app = APPS[key];
     const url = gpxUrl(t);
-    if (isAndroid) {
+    if (isAndroid && app.pkg) {
       const back = new URL(location.href);
       back.search = "?noapp=" + key;
       back.hash = t.id;
@@ -223,7 +225,7 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showAppHelp(t, key, `<b>GPX downloaded.</b> To open it in ${app.name}:`);
+    showAppHelp(t, key, `<b>Downloading…</b> To open it in ${app.name}:`);
   }
 
   function drawProfile(t) {

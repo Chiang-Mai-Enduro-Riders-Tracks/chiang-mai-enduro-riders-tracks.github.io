@@ -38,7 +38,7 @@ def read_gpx(path):
         ele = None
         for c in el:
             if c.tag.rsplit("}", 1)[-1] == "ele" and c.text:
-                ele = float(c.text)
+                ele = float(c.text) or None  # some planners write 0 for "unknown"
         pts.append((float(el.get("lat")), float(el.get("lon")), ele))
     return pts
 
