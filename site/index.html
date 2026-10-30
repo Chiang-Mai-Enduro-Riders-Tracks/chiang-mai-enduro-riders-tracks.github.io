@@ -16,7 +16,7 @@
     <h1 id="title">Chiang Mai Enduro Riders Tracks</h1>
     <p id="subtitle" class="muted"></p>
   </div>
-  <a class="btn" href="gpx/all-tracks.zip" download>Download all GPX</a>
+  <a class="btn" id="zipAll" href="gpx/all-tracks.zip" download>Download all GPX</a>
 </header>
 
 <main class="layout">
@@ -27,15 +27,16 @@
 
   <aside class="panel">
     <div id="overview">
+      <a class="back" id="toMain" href="#" hidden>← Easy enduro tracks</a>
       <div class="notice">
         <p id="intro"></p>
         <p id="restricted" class="strong"></p>
       </div>
       <details class="rules" id="rules">
-        <summary>Read before riding: gear, difficulty scale, wet rule</summary>
+        <summary id="rulesSummary">Read before riding</summary>
         <div id="rulesBody"></div>
       </details>
-      <h2 class="section">Tracks</h2>
+      <h2 class="section" id="listHead">Tracks</h2>
       <ol id="list" class="list"></ol>
       <h2 class="section" id="changesHead">Recent updates</h2>
       <ul id="changes" class="changes"></ul>

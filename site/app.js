@@ -9,19 +9,19 @@
   }
   const { site, tracks } = data;
 
-  document.title = site.title;
   $("title").textContent = site.title;
-  $("subtitle").textContent = site.subtitle;
-  // Sections come from site.json; each track's Category line in NOTES.txt picks one. The first section is
-  // the main list; the others (Adventure) follow it at the bottom under their own heading.
-  const sections = site.sections;
-  const sectionOf = id => sections.find(s => s.id === id) || sections[0];
-  $("intro").textContent = sections[0].intro;
   $("restricted").textContent = site.restricted;
   $("contribute").textContent = site.contribute;
 
-  // "Read before riding" block from the header of NOTES.txt
-  $("rulesBody").innerHTML = data.rules.map(b => {
+  // Sections come from site.json; each track's Category line in NOTES.txt picks one. The first section is
+  // the main page (#); every other section is its own page (#adventure) with its own map, list and rules.
+  const sections = site.sections;
+  const main = sections[0];
+  const sectionOf = id => sections.find(s => s.id === id) || main;
+  const sectionHash = id => (id === main.id ? "" : id);
+  let section = null;
+
+  const rulesHtml = blocks => blocks.map(b => {
     if (b.type === "ul") return `<ul>${b.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
     if (b.type === "scale") return `<div class="scale">${b.items.map(([n, t]) => `${dots(n)}<span>${esc(t)}</span>`).join("")}</div>`;
     return `<p>${esc(b.text)}</p>`;
@@ -44,7 +44,7 @@
     g.on("mouseout", () => highlight(t.id, false));
     layers[t.id] = { g, line, casing, start };
   });
-  const allBounds = L.latLngBounds(tracks.flatMap(t => t.line));
+  const boundsOf = sec => L.latLngBounds(tracks.filter(t => t.category === sec).flatMap(t => t.line));
   // A map fitted while its box still has no size zooms all the way in; wait for layout first.
   let fitTimer = null;
   const fitTo = (bounds, pad) => {
@@ -56,7 +56,7 @@
     map.stop();
     map.fitBounds(bounds, { padding: [pad, pad], animate: false });
   };
-  const fitAll = () => fitTo(allBounds, 24);
+  const fitAll = () => fitTo(boundsOf(section), 24);
 
   function highlight(id, on) {
     const card = document.querySelector(`.card[data-id="${id}"]`);
@@ -92,23 +92,47 @@
         <span class="ver" style="display:block">${verLine(t)}</span>
       </span>
     </button></li>`;
-  $("list").innerHTML = sections.map((sec, i) => {
-    const ts = tracks.filter(t => t.category === sec.id);
-    if (!ts.length) return "";
-    const head = i ? `<li class="list-head"><h2 class="section">${esc(sec.title)}</h2><p class="sec-intro">${esc(sec.intro)}</p></li>` : "";
-    return head + ts.map(card).join("");
-  }).join("");
-  document.querySelectorAll(".card").forEach(c => {
-    c.addEventListener("click", () => go(c.dataset.id));
-    c.addEventListener("mouseenter", () => highlight(c.dataset.id, true));
-    c.addEventListener("mouseleave", () => highlight(c.dataset.id, false));
-  });
+  // Switch the page to one section: header, intro, rules, zip, list, updates and which tracks are on the map.
+  function setSection(id) {
+    if (section === id) return;
+    section = id;
+    const sec = sectionOf(id);
+    const isMain = id === main.id;
+    document.title = isMain ? site.title : `${sec.title} · ${site.title}`;
+    $("subtitle").textContent = sec.subtitle;
+    $("intro").textContent = sec.intro;
+    $("rulesSummary").textContent = sec.rulesSummary;
+    $("rulesBody").innerHTML = rulesHtml(data.rules[id] || []);
+    $("zipAll").href = `gpx/${id}-tracks.zip`;
+    $("toMain").hidden = isMain;
+    $("listHead").textContent = isMain ? "Tracks" : sec.title;
 
-  $("changesHead").hidden = $("changes").hidden = !data.changes.length;
-  $("changes").innerHTML = data.changes.slice(0, 12).map(c => `
-    <li><time>${fmtDate(c.date)}</time>
-    <span>${c.track ? `<a href="#${c.track}">${esc(c.what)}</a>` : `<b>${esc(c.what)}</b>`}
-    — ${esc(c.note)}</span></li>`).join("");
+    const others = sections.filter(s => s.id !== id && s.id !== main.id && tracks.some(t => t.category === s.id));
+    $("list").innerHTML = tracks.filter(t => t.category === id).map(card).join("") +
+      (isMain ? others.map(s => `
+        <li><a class="card seclink" href="#${s.id}">
+          <span class="swatch"></span>
+          <span><h3>${esc(s.title)} →</h3><span class="stats">${esc(s.teaser || s.intro)}
+            · ${(n => `${n} track${n === 1 ? "" : "s"}`)(tracks.filter(t => t.category === s.id).length)}</span></span>
+        </a></li>`).join("") : "");
+    document.querySelectorAll(".card[data-id]").forEach(c => {
+      c.addEventListener("click", () => go(c.dataset.id));
+      c.addEventListener("mouseenter", () => highlight(c.dataset.id, true));
+      c.addEventListener("mouseleave", () => highlight(c.dataset.id, false));
+    });
+
+    const changes = data.changes.filter(c => !c.track || tracks.find(t => t.id === c.track)?.category === id);
+    $("changesHead").hidden = $("changes").hidden = !changes.length;
+    $("changes").innerHTML = changes.slice(0, 12).map(c => `
+      <li><time>${fmtDate(c.date)}</time>
+      <span>${c.track ? `<a href="#${c.track}">${esc(c.what)}</a>` : `<b>${esc(c.what)}</b>`}
+      — ${esc(c.note)}</span></li>`).join("");
+
+    for (const t of tracks) {
+      if (t.category === id) all.addLayer(layers[t.id].g);
+      else all.removeLayer(layers[t.id].g);
+    }
+  }
 
   // ---------- detail ----------
   let current = null;
@@ -116,8 +140,11 @@
 
   function go(id) { location.hash = id ? "#" + id : ""; }
 
-  function showOverview() {
+  function showOverview(id) {
     current = null;
+    const changed = section !== id;
+    setSection(id);
+    if (changed && window.innerWidth <= 820) window.scrollTo({ top: 0 });
     $("detail").hidden = true;
     $("overview").hidden = false;
     $("profile").hidden = true;
@@ -132,6 +159,7 @@
 
   function showTrack(t) {
     current = t;
+    setSection(t.category);
     for (const [id, l] of Object.entries(layers)) {
       const on = id === t.id;
       l.line.setStyle({ opacity: on ? 1 : 0.25, weight: on ? 5 : 3 });
@@ -144,7 +172,7 @@
     const legalIdx = t.fields.findIndex(f => f[0].toLowerCase() === "legal");
     const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${t.start[0]},${t.start[1]}`;
     $("detail").innerHTML = `
-      <button class="back" id="back">← All tracks</button>
+      <button class="back" id="back">← All ${t.category === main.id ? "" : esc(sectionOf(t.category).title) + " "}tracks</button>
       <div class="detail-head">
         <div class="muted small">${t.category !== sections[0].id ? esc(sectionOf(t.category).title) + " · " : ""}Track ${t.id} · ${dots(t.difficulty)} ${t.difficulty ? t.difficulty + "/5" : ""}</div>
         <h2>${esc(t.name)}</h2>
@@ -199,7 +227,7 @@
       </details>` : `<p class="muted small">${esc(site.contribute)}</p>`}`;
     $("overview").hidden = true;
     $("detail").hidden = false;
-    $("back").onclick = () => go("");
+    $("back").onclick = () => go(sectionHash(t.category));
     $("copy").onclick = async () => {
       try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; }
       catch { $("copy").textContent = "Copy failed"; }
@@ -375,7 +403,8 @@
   function route() {
     const id = location.hash.slice(1);
     const t = tracks.find(t => t.id === id);
-    if (t) showTrack(t); else showOverview();
+    if (t) showTrack(t);
+    else showOverview(sections.some(s => s.id === id) ? id : main.id);
   }
   window.addEventListener("hashchange", route);
   route();

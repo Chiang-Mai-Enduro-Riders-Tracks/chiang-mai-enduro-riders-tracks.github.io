@@ -8,7 +8,7 @@
 <meta name="description" content="Beginner-friendly enduro GPX routes around Chiang Mai, with notes and downloads.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.min.css">
-<link rel="stylesheet" href="style.css?v=cae03bbb">
+<link rel="stylesheet" href="style.css?v=ef0bdf35">
 </head>
 <body>
 <header class="top">
@@ -16,7 +16,7 @@
     <h1 id="title">Chiang Mai Enduro Riders Tracks</h1>
     <p id="subtitle" class="muted"></p>
   </div>
-  <a class="btn" href="gpx/all-tracks.zip" download>Download all GPX</a>
+  <a class="btn" id="zipAll" href="gpx/all-tracks.zip" download>Download all GPX</a>
 </header>
 
 <main class="layout">
@@ -27,15 +27,16 @@
 
   <aside class="panel">
     <div id="overview">
+      <a class="back" id="toMain" href="#" hidden>← Easy enduro tracks</a>
       <div class="notice">
         <p id="intro"></p>
         <p id="restricted" class="strong"></p>
       </div>
       <details class="rules" id="rules">
-        <summary>Read before riding: gear, difficulty scale, wet rule</summary>
+        <summary id="rulesSummary">Read before riding</summary>
         <div id="rulesBody"></div>
       </details>
-      <h2 class="section">Tracks</h2>
+      <h2 class="section" id="listHead">Tracks</h2>
       <ol id="list" class="list"></ol>
       <h2 class="section" id="changesHead">Recent updates</h2>
       <ul id="changes" class="changes"></ul>
@@ -47,6 +48,6 @@
 
 <script src="vendor/leaflet.min.js"></script>
 <script src="common.js?v=68463d85"></script>
-<script src="app.js?v=859cd1a9"></script>
+<script src="app.js?v=18cd552c"></script>
 </body>
 </html>

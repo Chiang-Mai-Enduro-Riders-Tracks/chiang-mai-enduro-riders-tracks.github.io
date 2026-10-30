@@ -313,6 +313,15 @@ def main():
             **st,
         })
 
+    # "Read before riding" per section: the NOTES.txt header, or the section's own rules file
+    rules = {}
+    for sec in site.get("sections", []):
+        if sec.get("rulesFile"):
+            with open(os.path.join(TRACKS, sec["rulesFile"]), encoding="utf-8") as f:
+                rules[sec["id"]] = parse_header(f.read())
+        else:
+            rules[sec["id"]] = header
+
     # site-wide change log, newest first
     # only real changes since the site started; the Drive versions are v1 history, not "updates"
     changes = []
@@ -329,12 +338,16 @@ def main():
         shutil.rmtree(OUT)
     shutil.copytree(SRC, OUT)
     os.makedirs(os.path.join(OUT, "gpx"))
-    zpath = os.path.join(OUT, "gpx", "all-tracks.zip")
-    with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
-        for t in tracks:
-            shutil.copy2(os.path.join(TRACKS, t["file"]), os.path.join(OUT, "gpx", t["file"]))
-            z.write(os.path.join(TRACKS, t["file"]), t["file"])
-        z.write(notes_path, "IMPORTANT NOTES.txt")
+    for t in tracks:
+        shutil.copy2(os.path.join(TRACKS, t["file"]), os.path.join(OUT, "gpx", t["file"]))
+    # one zip per section (the "Download all GPX" button on each page), plus everything together
+    zips = [("all-tracks.zip", tracks)] + [(f'{sec["id"]}-tracks.zip', [t for t in tracks if t["category"] == sec["id"]])
+                                           for sec in site.get("sections", [])]
+    for name, ts in zips:
+        with zipfile.ZipFile(os.path.join(OUT, "gpx", name), "w", zipfile.ZIP_DEFLATED) as z:
+            for t in ts:
+                z.write(os.path.join(TRACKS, t["file"]), t["file"])
+            z.write(notes_path, "IMPORTANT NOTES.txt")
     shutil.copy2(notes_path, os.path.join(OUT, "gpx", "IMPORTANT NOTES.txt"))
     open(os.path.join(OUT, ".nojekyll"), "w").close()
 
@@ -353,7 +366,7 @@ def main():
 
     data = {
         "site": site,
-        "rules": header,
+        "rules": rules,
         "tracks": tracks,
         "changes": changes[:60],
         "built": datetime.now(timezone.utc).strftime("%Y-%m-%d"),

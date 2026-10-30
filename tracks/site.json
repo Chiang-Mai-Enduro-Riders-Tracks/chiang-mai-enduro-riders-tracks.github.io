@@ -13,12 +13,18 @@
     {
       "id": "enduro",
       "title": "Easy Enduro",
-      "intro": "Easy GPS tracks for beginners. All are outside national parks and not restricted, except the Mae Khanin river loop, which is closed during smoke season."
+      "intro": "Easy GPS tracks for beginners. All are outside national parks and not restricted, except the Mae Khanin river loop, which is closed during smoke season.",
+      "subtitle": "Beginner-friendly enduro GPX routes around Chiang Mai",
+      "rulesSummary": "Read before riding: gear, difficulty scale, wet rule"
     },
     {
       "id": "adventure",
-      "title": "Adventure",
-      "intro": "Longer rides on small village roads, mostly concrete with some dirt, through remote hill-tribe villages. Plan a full day."
+      "title": "Adventure & Supermoto",
+      "intro": "Longer rides on small village roads, mostly concrete with some dirt, through remote hill-tribe villages. Plan a full day.",
+      "subtitle": "Adventure and supermoto routes from Chiang Mai",
+      "rulesFile": "ADVENTURE-NOTES.txt",
+      "rulesSummary": "Read before riding: bike, gear, planning",
+      "teaser": "Long village-road rides for adventure and supermoto bikes."
     }
   ]
 }
