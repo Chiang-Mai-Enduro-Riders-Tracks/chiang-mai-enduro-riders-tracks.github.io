@@ -40,7 +40,7 @@
     g.on("click", () => go(t.id));
     g.on("mouseover", () => highlight(t.id, true));
     g.on("mouseout", () => highlight(t.id, false));
-    layers[t.id] = { g, line, casing };
+    layers[t.id] = { g, line, casing, start };
   });
   const allBounds = L.latLngBounds(tracks.flatMap(t => t.line));
   const fitAll = () => map.fitBounds(allBounds, { padding: [24, 24] });
@@ -106,7 +106,7 @@
     for (const l of Object.values(layers)) {
       l.line.setStyle({ opacity: 0.95, weight: 4 });
       l.casing.setStyle({ opacity: 0.55 });
-      l.g.addTo(all);
+      l.start.setStyle({ opacity: 1, fillOpacity: 1 });
     }
     map.invalidateSize();
     fitAll();
@@ -118,6 +118,7 @@
       const on = id === t.id;
       l.line.setStyle({ opacity: on ? 1 : 0.25, weight: on ? 5 : 3 });
       l.casing.setStyle({ opacity: on ? 0.7 : 0 });
+      l.start.setStyle({ opacity: on ? 1 : 0.25, fillOpacity: on ? 1 : 0.25 });
     }
     layers[t.id].g.bringToFront();
 
