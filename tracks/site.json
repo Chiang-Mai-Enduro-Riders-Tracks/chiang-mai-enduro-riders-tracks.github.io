@@ -4,7 +4,13 @@
   "credit": "Tracks by Pavel & Jul",
   "intro": "Easy GPS tracks for beginners. All are outside national parks and not restricted, except the Mae Khanin river loop, which is closed during smoke season.",
   "restricted": "Please ride these community tracks instead of Doi Suthep or Hang Dong, which are restricted areas.",
-  "contribute": "Help keep the tracks current: record your rides and send the recording to Pavel in the group if you find a deviation or a new \"no off-road\" sign.",
-  "owners": ["Pavel", "Jul", "Gareth", "Chu"],
-  "repo": "Chiang-Mai-Enduro-X-Riders-Tracks/chiang-mai-enduro-x-riders-tracks.github.io"
+  "contribute": "Help keep the tracks current: if you find a deviation or a new \"no off-road\" sign, record your ride and send it to Pavel from the track's page.",
+  "owners": [
+    "Pavel",
+    "Jul",
+    "Gareth",
+    "Chu"
+  ],
+  "repo": "Chiang-Mai-Enduro-X-Riders-Tracks/chiang-mai-enduro-x-riders-tracks.github.io",
+  "submitUrl": ""
 }

@@ -117,8 +117,18 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
   background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
 }
 .apphelp ul { margin: 6px 0 0; padding-left: 18px; }
-.editbox { margin-top: 20px; padding: 12px; font-size: 13px; border: 1px dashed var(--line); border-radius: var(--radius); }
-.editbox code { font-size: 12px; word-break: break-all; }
+.sendbox { margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.sendbox summary { padding: 12px 14px; cursor: pointer; font-weight: 600; }
+.sendbox form { padding: 0 14px 14px; display: grid; gap: 10px; }
+.sendbox form p { margin: 0; }
+.sendbox label { display: grid; gap: 4px; font-size: 13px; }
+.sendbox input:not([type=file]), .sendbox select, .sendbox textarea {
+  font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 100%;
+}
+.sendbox button { justify-self: start; }
+.sendbox button:disabled { opacity: 0.6; cursor: wait; }
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
 .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
 .fact span { display: block; font-size: 12px; color: var(--muted); }

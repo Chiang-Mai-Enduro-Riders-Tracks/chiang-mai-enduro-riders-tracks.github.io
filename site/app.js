@@ -151,15 +151,29 @@
         <li><b>v${v.version}</b> · ${fmtDate(v.date)} · ${esc(v.by)}<br><span class="muted">${esc(v.note)}</span></li>`).join("")}</ul>
       <p class="muted small">Current file: ${esc(t.file)}${h ? ` (v${h.version})` : ""}.
         Notes last changed ${t.notesUpdated ? fmtDate(t.notesUpdated.date) + " by " + esc(t.notesUpdated.by) : "—"}.</p>
-      <p class="muted small">${esc(site.contribute)}</p>
-      ${site.repo ? `<div class="editbox">
-        <b>Track editors</b> <span class="muted">(Pavel, Jul, Gareth: sign in to GitHub first)</span>
-        <div class="actions" style="margin:8px 0 4px">
-          <a class="btn" href="https://github.com/${site.repo}/upload/main/tracks" target="_blank" rel="noopener">Upload new GPX version</a>
-          <a class="btn" href="https://github.com/${site.repo}/edit/main/tracks/NOTES.txt" target="_blank" rel="noopener">Edit description</a>
-        </div>
-        <span class="muted">Upload with the same file name: <code>${esc(t.file)}</code>. <a href="editors.html">How it works</a></span>
-      </div>` : ""}`;
+      ${site.submitUrl ? `<details class="sendbox" id="sendbox">
+        <summary>Found a change on this track? Send it to Pavel</summary>
+        <form id="sendForm">
+          <p class="muted small">New "no off-road" sign, blocked trail, better line? Send your ride recording.
+            Pavel checks it and updates the track. Nothing goes on the site until he does.</p>
+          <label>Your name<input name="name" required maxlength="80" autocomplete="name"></label>
+          <label>Contact, so Pavel can ask questions <span class="muted">(optional: email or LINE)</span><input name="contact" maxlength="120"></label>
+          <label>What changed
+            <select name="kind">
+              <option>New "no off-road" sign</option>
+              <option>Trail blocked or closed</option>
+              <option>Better line or reroute</option>
+              <option>Track is fine, just confirming</option>
+              <option>Other</option>
+            </select></label>
+          <label>Note <span class="muted">(where, which km, what you saw)</span><textarea name="note" rows="3" maxlength="4000"></textarea></label>
+          <label>Your GPX recording<input type="file" name="gpx" accept=".gpx,application/gpx+xml" required></label>
+          <label>Photo <span class="muted">(optional, e.g. the sign)</span><input type="file" name="photo" accept="image/*"></label>
+          <input name="website" tabindex="-1" autocomplete="off" class="trap" aria-hidden="true">
+          <button class="btn primary" type="submit">Send to Pavel</button>
+          <p id="sendStatus" class="small" role="status"></p>
+        </form>
+      </details>` : `<p class="muted small">${esc(site.contribute)}</p>`}`;
     $("overview").hidden = true;
     $("detail").hidden = false;
     $("back").onclick = () => go("");
@@ -168,6 +182,7 @@
       catch { $("copy").textContent = "Copy failed"; }
     };
     document.querySelectorAll("[data-app]").forEach(b => b.onclick = () => openInApp(t, b.dataset.app));
+    if ($("sendForm")) $("sendForm").onsubmit = ev => { ev.preventDefault(); sendUpdate(t, ev.target); };
     document.querySelector(".panel").scrollTop = 0;
     if (window.innerWidth <= 820) window.scrollTo({ top: 0 });
 
@@ -227,6 +242,63 @@
     a.click();
     a.remove();
     showAppHelp(t, key, `<b>Downloading…</b> To open it in ${app.name}:`);
+  }
+
+  // ---------- rider updates → emailed to Pavel by the Google Apps Script in apps-script/ ----------
+
+  const readDataUrl = file => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+
+  // Phone photos are several MB; shrink to 1600 px JPEG before sending.
+  async function shrinkPhoto(file) {
+    try {
+      const img = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      return { name: file.name.replace(/\.\w+$/, "") + ".jpg", type: "image/jpeg", data: c.toDataURL("image/jpeg", 0.82) };
+    } catch {
+      return { name: file.name, type: file.type, data: await readDataUrl(file) };
+    }
+  }
+
+  async function sendUpdate(t, form) {
+    const status = $("sendStatus");
+    const btn = form.querySelector("button[type=submit]");
+    const f = new FormData(form);
+    const gpx = f.get("gpx"), photo = f.get("photo");
+    if (!gpx || !gpx.size) { status.textContent = "Please add your GPX recording."; return; }
+    if (gpx.size > 10 * 1024 * 1024) { status.textContent = "That GPX is over 10 MB. Please trim it or send a shorter recording."; return; }
+    btn.disabled = true;
+    status.style.color = "";
+    status.textContent = "Sending…";
+    try {
+      const payload = {
+        track: `${t.id} ${t.name}`, trackId: t.id,
+        name: f.get("name"), contact: f.get("contact"), kind: f.get("kind"), note: f.get("note"),
+        website: f.get("website"),
+        gpx: { name: gpx.name, type: "application/gpx+xml", data: await readDataUrl(gpx) },
+        photo: photo && photo.size ? await shrinkPhoto(photo) : null,
+      };
+      // text/plain keeps this a "simple" request, so the browser skips the CORS preflight Apps Script can't answer
+      const r = await fetch(site.submitUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      const out = await r.json();
+      if (!out.ok) throw new Error(out.error || "Failed");
+      form.reset();
+      status.style.color = "var(--ok)";
+      status.textContent = "Sent. Thank you! Pavel will take a look.";
+    } catch (e) {
+      status.style.color = "var(--warn)";
+      status.textContent = `Couldn't send: ${e.message}. Please try again, or send the file to Pavel in the group.`;
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   function drawProfile(t) {
