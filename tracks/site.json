@@ -19,12 +19,12 @@
     },
     {
       "id": "adventure",
-      "title": "Adventure & Supermoto",
+      "title": "Adventure",
       "intro": "Longer rides on small village roads, mostly concrete with some dirt, through remote hill-tribe villages. Plan a full day.",
-      "subtitle": "Adventure and supermoto routes from Chiang Mai",
+      "subtitle": "Adventure routes from Chiang Mai",
       "rulesFile": "ADVENTURE-NOTES.txt",
       "rulesSummary": "Read before riding: bike, gear, planning",
-      "teaser": "Long village-road rides for adventure and supermoto bikes."
+      "teaser": "Long village-road rides for adventure bikes."
     }
   ]
 }
