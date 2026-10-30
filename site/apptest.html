@@ -42,6 +42,10 @@
       k => `intent://${path}#Intent;scheme=https;action=android.intent.action.VIEW;type=application/xml;package=${PKG};S.browser_fallback_url=${back(k)};end`],
     ["G", "Share the link to Gaia (like the Share button)",
       k => `intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT=${encodeURIComponent(gpx.href)};package=${PKG};S.browser_fallback_url=${back(k)};end`],
+    ["I", "Gaia's own website link (gaiagps.com): opens in the app?",
+      k => `intent://www.gaiagps.com/#Intent;scheme=https;action=android.intent.action.VIEW;package=${PKG};S.browser_fallback_url=${back(k)};end`],
+    ["J", "Gaia's own app address (gaiagps://)",
+      k => `intent://open#Intent;scheme=gaiagps;action=android.intent.action.VIEW;package=${PKG};S.browser_fallback_url=${back(k)};end`],
     ["H", "No app named: does Android offer Gaia in the list?",
       k => `intent://${path}#Intent;scheme=https;action=android.intent.action.VIEW;type=application/gpx+xml;S.browser_fallback_url=${back(k)};end`],
   ];
