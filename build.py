@@ -6,6 +6,8 @@ On GitHub the workflow in .github/workflows/build.yml runs this on every push.
 """
 import json
 import math
+import urllib.error
+import urllib.request
 import os
 import re
 import shutil
@@ -126,6 +128,63 @@ def track_stats(pts):
         "line": line,
         "profile": profile,
     }
+
+
+# ---------- missing elevation ----------
+
+ELE_CACHE = os.path.join(TRACKS, "elevation-cache.json")
+
+
+def fill_elevation(pts, fn):
+    """Some planners save positions only. Look the ground height up from terrain data (Open-Meteo's free
+    elevation API) every ~50 m, interpolate in between, and cache the answers in tracks/ so later builds
+    don't depend on the service. The GPX file itself is never changed. Returns True if heights were added."""
+    cum = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        cum.append(cum[-1] + haversine(a, b))
+    idx, nxt = [], 0.0
+    for i, d in enumerate(cum):
+        if d >= nxt:
+            idx.append(i)
+            nxt = d + 50
+    if idx[-1] != len(pts) - 1:
+        idx.append(len(pts) - 1)
+    key = lambda p: f"{p[0]:.5f},{p[1]:.5f}"
+    cache = json.load(open(ELE_CACHE)) if os.path.exists(ELE_CACHE) else {}
+    missing = [i for i in idx if key(pts[i]) not in cache]
+    import time
+    try:
+        for k in range(0, len(missing), 100):  # the API takes up to 100 points per call
+            chunk = missing[k:k + 100]
+            url = ("https://api.open-meteo.com/v1/elevation?latitude=" + ",".join(f"{pts[i][0]:.5f}" for i in chunk)
+                   + "&longitude=" + ",".join(f"{pts[i][1]:.5f}" for i in chunk))
+            for attempt in range(6):  # the free service throttles bursts (HTTP 429): back off and retry
+                try:
+                    with urllib.request.urlopen(url, timeout=30) as r:
+                        for i, e in zip(chunk, json.load(r)["elevation"]):
+                            cache[key(pts[i])] = e
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code != 429 or attempt == 5:
+                        raise
+                    time.sleep(5 * (attempt + 1))
+            time.sleep(1.5)
+    except Exception as e:
+        warn(f"{fn}: no elevation in the file and the terrain lookup failed ({e})")
+        return False
+    finally:
+        if missing:  # keep whatever was looked up, so a retry continues from here
+            with open(ELE_CACHE, "w") as f:
+                json.dump(cache, f, separators=(",", ":"), sort_keys=True)
+    known = [(cum[i], cache[key(pts[i])]) for i in idx]
+    j = 0
+    for i, p in enumerate(pts):
+        while j < len(known) - 2 and known[j + 1][0] < cum[i]:
+            j += 1
+        (d0, e0), (d1, e1) = known[j], known[j + 1]
+        e = e0 if d1 == d0 else e0 + (e1 - e0) * (cum[i] - d0) / (d1 - d0)
+        pts[i] = (p[0], p[1], e)
+    return True
 
 
 # ---------- NOTES.txt ----------
@@ -266,6 +325,9 @@ def main():
         if len(pts) < 2:
             warn(f"{fn}: no track points found")
             continue
+        filled = False
+        if sum(p[2] is not None for p in pts) < len(pts) * 0.8:
+            filled = fill_elevation(pts, fn)
         st = track_stats(pts)
         sec = sections.get(tid)
         fields = sec["fields"] if sec else []
@@ -291,6 +353,8 @@ def main():
             warn(f"{fn}: terrain percentages add up to {sum(terrain)}%, not 100%")
         if st["climb"] is None:
             warn(f"{fn}: no elevation data, so no climb total or profile")
+        elif filled:
+            print(f"note: {fn} has no heights; filled from terrain data", file=sys.stderr)
 
         history = seed.get(tid, []) + commits(f"tracks/{tid}-*")
         for i, h in enumerate(history):
@@ -303,6 +367,7 @@ def main():
         tracks.append({
             "id": tid,
             "category": category,
+            "eleFromTerrain": filled,
             "file": fn,
             "name": track_name(fn),
             "difficulty": diff,
