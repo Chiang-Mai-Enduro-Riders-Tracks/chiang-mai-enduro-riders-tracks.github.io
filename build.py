@@ -333,6 +333,19 @@ def main():
     shutil.copy2(notes_path, os.path.join(OUT, "gpx", "IMPORTANT NOTES.txt"))
     open(os.path.join(OUT, ".nojekyll"), "w").close()
 
+    # Stamp the CSS/JS links with a content hash so phones never mix an old cached script with new data.
+    import hashlib
+    for page in ("index.html", "editors.html"):
+        path = os.path.join(OUT, page)
+        with open(path, encoding="utf-8") as f:
+            html = f.read()
+        for asset in ("style.css", "common.js", "app.js", "editors.js"):
+            with open(os.path.join(SRC, asset), "rb") as f:
+                v = hashlib.sha1(f.read()).hexdigest()[:8]
+            html = html.replace(f'"{asset}"', f'"{asset}?v={v}"')
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(html)
+
     data = {
         "site": site,
         "rules": header,

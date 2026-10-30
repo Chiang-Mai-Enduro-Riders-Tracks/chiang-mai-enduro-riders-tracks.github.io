@@ -126,7 +126,7 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 .spotpick { display: grid; gap: 6px; font-size: 13px; }
 .spotrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .btn.small { padding: 5px 10px; font-size: 13px; }
-#spotMap { height: 220px; border-radius: 8px; border: 1px solid var(--line); }
+#spotMap { height: 220px; border-radius: 8px; border: 1px solid var(--line); isolation: isolate; }  /* keep its map layers under the sticky main map on phones */
 .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
 .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
@@ -142,7 +142,7 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 
 /* elevation profile */
 #profile { height: 128px; border-top: 1px solid var(--line); background: var(--surface); position: relative; }
-#profile svg { width: calc(100% - 44px); margin-left: 44px; height: 100%; display: block; touch-action: none; }
+#profile svg { width: calc(100% - 52px); margin-left: 52px; height: 100%; display: block; touch-action: none; }
 #profile .axis { position: absolute; font-size: 11px; color: var(--muted); white-space: nowrap; pointer-events: none; }
 #profile .tip {
   position: absolute; top: 6px; padding: 2px 8px; border-radius: 6px; font-size: 12px;
@@ -176,5 +176,5 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 .box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
 .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 select, input[type=file] { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; max-width: 100%; }
-#cmpMap { height: 420px; border-radius: var(--radius); margin-top: 12px; border: 1px solid var(--line); }
+#cmpMap { isolation: isolate; height: 420px; border-radius: var(--radius); margin-top: 12px; border: 1px solid var(--line); }
 #cmpResult { margin-top: 10px; }

@@ -242,7 +242,7 @@
       if (!pin) pin = L.marker([n.lat, n.lon]).addTo(spotMap);
       else pin.setLatLng([n.lat, n.lon]);
       $("spotInfo").className = "small";
-      $("spotInfo").innerHTML = `📍 <b>km ${spot.km}</b>` + (spot.off > 150 ? ` <span class="muted">(you tapped ${spot.off} m from the track)</span>` : "");
+      $("spotInfo").innerHTML = `📍 <b>km ${spot.km}</b>` + (spot.off > 150 ? ` <span class="muted">(nearest point on the track, ${spot.off} m away)</span>` : "");
     }
 
     $("sendbox").addEventListener("toggle", () => {
@@ -259,7 +259,7 @@
       $("spotInfo").textContent = "Finding you…";
       navigator.geolocation.getCurrentPosition(
         p => { const ll = L.latLng(p.coords.latitude, p.coords.longitude); setSpot(ll); spotMap.setView(ll, 15); },
-        () => { $("spotInfo").textContent = "Couldn't get your location. Tap the map instead."; },
+        () => { $("spotInfo").textContent = spot ? `Couldn't get your location. Still marked: km ${spot.km}.` : "Couldn't get your location. Tap the map instead."; },
         { enableHighAccuracy: true, timeout: 15000 });
     };
     form.onsubmit = ev => { ev.preventDefault(); sendUpdate(t, form, spot, () => { spot = null; if (pin) { pin.remove(); pin = null; } $("spotInfo").className = "small muted"; $("spotInfo").textContent = "No spot marked yet."; }); };
@@ -310,7 +310,7 @@
       box.innerHTML = `<div class="none">No elevation data in this GPX file.</div>`;
       return;
     }
-    const W = 1000, H = 128, padT = 8, padB = 18, GUT = 44;  // GUT: px gutter left of the chart for the height scale
+    const W = 1000, H = 128, padT = 8, padB = 18, GUT = 52;  // GUT: px gutter left of the chart for the height scale
     const maxKm = p[p.length - 1][0];
     let lo = Math.min(...p.map(q => q[1])), hi = Math.max(...p.map(q => q[1]));
     // round the scale to a step that gives 2-4 labelled heights
