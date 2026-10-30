@@ -135,7 +135,6 @@
       <div class="actions">
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
-        <button class="btn" data-app="gaia">Open in Gaia</button>
         <button class="btn" data-app="locus">Open in Locus</button>
         <button class="btn" id="copy">Copy link</button>
       </div>
@@ -170,16 +169,12 @@
   }
 
   // Chrome on Android won't share .gpx files with other apps (not on its Web Share allowlist), so on
-  // Android each button sends an intent link straight to that app. If the app isn't installed or
+  // Android the button sends an intent link straight to the app. If the app isn't installed or
   // won't take the link, Chrome loads the fallback: this page with ?noapp=<app>, which shows the
   // manual steps. Other devices get the download plus the steps.
+  // Gaia GPS was tried the same way (com.trailbehind.android.gaiagps.pro) and ignores the link, so
+  // it has no button; only add an app here after it's been tested on a real phone.
   const APPS = {
-    gaia: {
-      name: "Gaia GPS",
-      pkg: "com.trailbehind.android.gaiagps.pro",
-      steps: ["Open the downloaded file from the notification or the Files app and choose <b>Gaia GPS</b>.",
-        "Or in Gaia: <b>Saved</b> → <b>⋮</b> → <b>Import File</b> → pick the file in Downloads."],
-    },
     locus: {
       name: "Locus Map",
       pkg: "menion.android.locus",
