@@ -208,7 +208,7 @@
       <ul class="history">${[...t.history].reverse().map(v => `
         <li><b>v${v.version}</b> · ${fmtDate(v.date)} · ${esc(v.by)}<br><span class="muted">${esc(v.note)}</span></li>`).join("")}</ul>
       <p class="muted small">Current file: ${esc(t.file)}${h ? ` (v${h.version})` : ""}.
-        Notes last changed ${t.notesUpdated ? fmtDate(t.notesUpdated.date) + " by " + esc(t.notesUpdated.by) : "—"}.</p>
+        Notes last changed ${t.notesUpdated ? fmtDate(t.notesUpdated.date) : "—"}.</p>
       ${site.submitUrl ? `<details class="sendbox" id="sendbox">
         <summary>Found a change on this track? Send it to us</summary>
         <form id="sendForm">
