@@ -309,13 +309,8 @@ def main():
         })
 
     # site-wide change log, newest first
+    # only real changes since the site started; the Drive versions are v1 history, not "updates"
     changes = []
-    for key, entries in seed.items():
-        if key.startswith("_"):
-            continue
-        for e in entries:
-            label = "Track notes" if key == "notes" else next((t["name"] for t in tracks if t["id"] == key), key)
-            changes.append({**e, "what": label, "track": None if key == "notes" else key})
     for c in commits("tracks/"):
         files = git("show", "--name-only", "--format=", c["sha"]).split()
         ids = sorted({m.group(1) for f in files if (m := re.match(r"tracks/(\d+)-", f))})

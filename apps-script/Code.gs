@@ -1,12 +1,11 @@
 /**
- * Rider update inbox for Chiang Mai Enduro X Riders Tracks.
+ * Rider update inbox for Chiang Mai Enduro Riders Tracks.
  *
- * The site's "Send an update to Pavel" form posts here. Each submission is emailed to the
- * reviewer with the GPX (and photo) attached; he checks it and publishes the new GPX on GitHub
- * himself. Nothing a rider sends reaches the site directly. Nothing is stored: the email is the
- * record (a copy stays in the setup account's Sent folder). The script only needs "send email".
+ * The site's "Send it to us" form posts here. Each report (a spot on the track and/or a GPX, plus
+ * a note and optional photo) is emailed to the reviewer, who checks it and publishes changes on
+ * GitHub himself. Nothing a rider sends reaches the site directly. Nothing is stored: the email is
+ * the record (a copy stays in the setup account's Sent folder). The script only needs "send email".
  *
-
  * Keep the email text plain ASCII: Gmail garbles characters like arrows in these plain-text mails.
  *
  * Setup (script.google.com, signed in to the Google account that should own the inbox):
@@ -19,7 +18,7 @@
 
 const NOTIFY_TO = "PUT-REVIEWER-EMAIL-HERE";  // who reviews rider updates (Pavel)
 const TEST_TO = "PUT-SETUP-EMAIL-HERE";       // test submissions go here instead, never to the reviewer
-const SITE = "https://chiang-mai-enduro-x-riders-tracks.github.io/";
+const SITE = "https://chiang-mai-enduro-riders-tracks.github.io/";
 const MAX_GPX = 10 * 1024 * 1024;
 const MAX_PHOTO = 8 * 1024 * 1024;
 
@@ -33,31 +32,37 @@ function doPost(e) {
     const kind = clean(d.kind, 60);
     const note = clean(d.note, 4000);
     const contact = clean(d.contact, 120);
-    if (!name || !track || !d.gpx || !d.gpx.data) return reply({ ok: false, error: "Missing name, track or GPX" });
+    const spot = d.spot && isFinite(d.spot.lat) && isFinite(d.spot.lon)
+      ? { lat: Number(d.spot.lat), lon: Number(d.spot.lon), km: Number(d.spot.km), off: Number(d.spot.off) || 0 } : null;
+    const hasGpx = d.gpx && d.gpx.data;
+    if (!name || !track || (!spot && !hasGpx)) return reply({ ok: false, error: "Missing name, track, or a spot or GPX" });
 
-    const gpx = toBlob(d.gpx, "application/gpx+xml", MAX_GPX);
-    if (!/^\s*<\?xml|<gpx/i.test(gpx.getDataAsString().slice(0, 500))) return reply({ ok: false, error: "That file isn't a GPX" });
+    const gpx = hasGpx ? toBlob(d.gpx, "application/gpx+xml", MAX_GPX) : null;
+    if (gpx && !/^\s*<\?xml|<gpx/i.test(gpx.getDataAsString().slice(0, 500))) return reply({ ok: false, error: "That file isn't a GPX" });
     const photo = d.photo && d.photo.data ? toBlob(d.photo, d.photo.type || "image/jpeg", MAX_PHOTO) : null;
+    const files = [gpx, photo].filter(Boolean);
+    const where = spot ? `km ${spot.km}` : "";
 
     const to = d.test ? TEST_TO : NOTIFY_TO;
     const body = [
-      `${name} sent an update for ${track}.`,
+      `${name} sent an update for ${track}${where ? " at " + where : ""}.`,
       ``,
       `What changed: ${kind || "-"}`,
+      spot ? `Where: ${where}${spot.off > 150 ? ` (tapped ${spot.off} m from the track)` : ""}, map: https://www.google.com/maps?q=${spot.lat},${spot.lon}` : `Where: no spot marked`,
       `Contact: ${contact || "-"}`,
       ``,
       note || "(no note)",
       ``,
-      `Their GPX${photo ? " and photo are" : " is"} attached.`,
+      files.length ? `Attached: ${[gpx && "their GPX", photo && "a photo"].filter(Boolean).join(" and ")}.` : `No files attached.`,
       ``,
-      `To review: open ${SITE}editors.html, go to "Check a rider's recording", pick the track and open the attached GPX.`,
-      `To publish: upload the corrected GPX on GitHub (same file name) and write "By: ${name}" in the description box.`,
+      gpx ? `To review the GPX: open ${SITE}editors.html, go to "Check a rider's recording", pick the track and open the attached file.` : ``,
+      `To publish a change: upload the corrected GPX or edit the notes on GitHub, and write "By: ${name}" in the description box.`,
       ``,
       `Track page: ${SITE}#${trackId}`,
     ].join("\n");
-    const opts = { name: "CNX Tracks", attachments: photo ? [gpx, photo] : [gpx] };
+    const opts = { name: "CNX Tracks", attachments: files };
     if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contact)) opts.replyTo = contact;
-    MailApp.sendEmail(to, `${d.test ? "[TEST] " : ""}Track update: ${track} from ${name}`, body, opts);
+    MailApp.sendEmail(to, `${d.test ? "[TEST] " : ""}Track update: ${track}${where ? " at " + where : ""} from ${name}`, body, opts);
     return reply({ ok: true });
   } catch (err) {
     console.error(err);

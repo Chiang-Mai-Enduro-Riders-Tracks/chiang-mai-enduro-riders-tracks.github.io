@@ -112,11 +112,6 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 .back { background: none; border: 0; color: var(--accent); font: inherit; padding: 0; cursor: pointer; margin-bottom: 10px; }
 .detail-head h2 { font-size: 21px; margin: 2px 0 6px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-.apphelp {
-  margin: -6px 0 12px; padding: 10px 12px; font-size: 13px; border-radius: 8px;
-  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-}
-.apphelp ul { margin: 6px 0 0; padding-left: 18px; }
 .sendbox { margin-top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 .sendbox summary { padding: 12px 14px; cursor: pointer; font-weight: 600; }
 .sendbox form { padding: 0 14px 14px; display: grid; gap: 10px; }
@@ -126,8 +121,12 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
   font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--line);
   border-radius: 8px; padding: 8px 10px; width: 100%;
 }
-.sendbox button { justify-self: start; }
+.sendbox button[type=submit] { justify-self: start; }
 .sendbox button:disabled { opacity: 0.6; cursor: wait; }
+.spotpick { display: grid; gap: 6px; font-size: 13px; }
+.spotrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+#spotMap { height: 220px; border-radius: 8px; border: 1px solid var(--line); }
 .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
 .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
@@ -143,18 +142,13 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 
 /* elevation profile */
 #profile { height: 128px; border-top: 1px solid var(--line); background: var(--surface); position: relative; }
-#profile svg { width: 100%; height: 100%; display: block; touch-action: none; }
+#profile svg { width: calc(100% - 44px); margin-left: 44px; height: 100%; display: block; touch-action: none; }
+#profile .axis { position: absolute; font-size: 11px; color: var(--muted); white-space: nowrap; pointer-events: none; }
 #profile .tip {
   position: absolute; top: 6px; padding: 2px 8px; border-radius: 6px; font-size: 12px;
   background: var(--surface-2); border: 1px solid var(--line); pointer-events: none; white-space: nowrap;
 }
 #profile .none { padding: 14px 16px; color: var(--muted); font-size: 13px; }
-
-.foot {
-  display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 16px; font-size: 12px;
-  color: var(--muted); border-top: 1px solid var(--line); background: var(--surface);
-}
-.foot a { color: var(--muted); }
 
 .leaflet-container { font: inherit; }
 .leaflet-control-layers, .leaflet-bar a { background: var(--surface); color: var(--text); border-color: var(--line); }
