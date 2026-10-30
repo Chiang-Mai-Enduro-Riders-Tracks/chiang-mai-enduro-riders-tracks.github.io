@@ -77,7 +77,7 @@ Shaded: 50% shaded.
 Difficulty: 2/5.
 Notes: Starts on road, passing through a gated community (ok to cross the gate). At km 17, stop at the watch tower, which you can climb (but be careful as it shakes a lot - not more than 2 people at a time). At km 47, there is a nice lake, a good spot for a break. Avoid detours to the sticky waterfall - too touristy. At km 72, you will pass the red sands playground - stop there to have fun jumping the small hills. The track ends on a nice viewpoint.
 
-Length: 75km (6-7 hours).
+Length: 53km (6-7 hours).
 Terrain: 10% paved (concrete), 60% double (easy dirt), 30% single (easy gravel).
 Wet conditions: potentially problematic, some pig skin (laterite).
 Up/downhills: mostly flat.
@@ -85,7 +85,7 @@ Shaded: 90% shaded.
 
 
 ----------------------------------------------------
-06-3of5-Mae-Rim-West-river-and-mountain.gpx
+06-2of5-Mae-Rim-West-river-and-mountain-temple.gpx
 ----------------------------------------------------
 Difficulty: 2/5.
 Notes: The route starts and finishes on a fun, all-season double track with 10+ stream crossings. The middle section takes you to the beautiful Wat Phra Putthabat Si Roi temple complex on easy double track and concrete roads. The return follows a wide, winding asphalt road, then a proper double track and a more challenging single track descent, before repeating the river track back to the start.
@@ -98,7 +98,7 @@ Shade: 70% shaded.
 
 
 ----------------------------------------------------
-07-2of3-Chiang-Mai-to-Pai.gpx
+07-2of5-Chiang-Mai-to-Pai.gpx
 ----------------------------------------------------
 Difficulty: 2/5.
 Notes: This is a much more fun (but much longer) way to go to Pai by taking small village roads (mostly concrete with some offroad). The track passes through several hill-tribe villages and has beautiful vistas. But there is one (short-ish) challenging section (single up/down hill with deep ruts), were you might need assistance. The track will take you a full day of riding even at a good pace, so start early.
