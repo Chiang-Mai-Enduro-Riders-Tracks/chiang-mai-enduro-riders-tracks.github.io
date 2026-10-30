@@ -21,6 +21,15 @@
   const sectionHash = id => (id === main.id ? "" : id);
   let section = null;
 
+  // Top-right section menu: buttons on a computer, a dropdown on a phone. Only shown once a second section has tracks.
+  const navSecs = sections.filter(s => s === main || tracks.some(t => t.category === s.id));
+  if (navSecs.length > 1) {
+    $("secNav").hidden = false;
+    $("secTabs").innerHTML = navSecs.map(s => `<a href="#${sectionHash(s.id)}" data-sec="${s.id}">${esc(s.title)}</a>`).join("");
+    $("secPick").innerHTML = navSecs.map(s => `<option value="${s.id}">${esc(s.title)}</option>`).join("");
+    $("secPick").addEventListener("change", e => go(sectionHash(e.target.value)));
+  }
+
   const rulesHtml = blocks => blocks.map(b => {
     if (b.type === "ul") return `<ul>${b.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>`;
     if (b.type === "scale") return `<div class="scale">${b.items.map(([n, t]) => `${dots(n)}<span>${esc(t)}</span>`).join("")}</div>`;
@@ -92,7 +101,7 @@
         <span class="ver" style="display:block">${verLine(t)}</span>
       </span>
     </button></li>`;
-  // Switch the page to one section: header, intro, rules, zip, list, updates and which tracks are on the map.
+  // Switch the page to one section: header, menu, intro, rules, list, updates and which tracks are on the map.
   function setSection(id) {
     if (section === id) return;
     section = id;
@@ -103,8 +112,13 @@
     $("intro").textContent = sec.intro;
     $("rulesSummary").textContent = sec.rulesSummary;
     $("rulesBody").innerHTML = rulesHtml(data.rules[id] || []);
-    $("zipAll").href = `gpx/${id}-tracks.zip`;
     $("toMain").hidden = isMain;
+    $("secPick").value = id;
+    document.querySelectorAll("#secTabs a").forEach(a => {
+      const on = a.dataset.sec === id;
+      a.classList.toggle("on", on);
+      if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
     $("listHead").textContent = isMain ? "Tracks" : sec.title;
 
     const others = sections.filter(s => s.id !== id && s.id !== main.id && tracks.some(t => t.category === s.id));

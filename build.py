@@ -405,7 +405,7 @@ def main():
     os.makedirs(os.path.join(OUT, "gpx"))
     for t in tracks:
         shutil.copy2(os.path.join(TRACKS, t["file"]), os.path.join(OUT, "gpx", t["file"]))
-    # one zip per section (the "Download all GPX" button on each page), plus everything together
+    # one zip per section plus everything together (no button on the site any more; links still work)
     zips = [("all-tracks.zip", tracks)] + [(f'{sec["id"]}-tracks.zip', [t for t in tracks if t["category"] == sec["id"]])
                                            for sec in site.get("sections", [])]
     for name, ts in zips:

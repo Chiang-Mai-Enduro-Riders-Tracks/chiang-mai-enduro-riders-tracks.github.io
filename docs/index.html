@@ -8,7 +8,7 @@
 <meta name="description" content="Beginner-friendly enduro GPX routes around Chiang Mai, with notes and downloads.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M5 24 L12 12 L17 19 L21 14 L27 24 Z' fill='%23f5a524'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="vendor/leaflet.min.css">
-<link rel="stylesheet" href="style.css?v=ef0bdf35">
+<link rel="stylesheet" href="style.css?v=b1acdf25">
 </head>
 <body>
 <header class="top">
@@ -16,7 +16,10 @@
     <h1 id="title">Chiang Mai Enduro Riders Tracks</h1>
     <p id="subtitle" class="muted"></p>
   </div>
-  <a class="btn" id="zipAll" href="gpx/all-tracks.zip" download>Download all GPX</a>
+  <nav class="secnav" id="secNav" aria-label="Sections" hidden>
+    <div class="seg" id="secTabs"></div>
+    <select id="secPick" aria-label="Choose a section"></select>
+  </nav>
 </header>
 
 <main class="layout">
@@ -48,6 +51,6 @@
 
 <script src="vendor/leaflet.min.js"></script>
 <script src="common.js?v=68463d85"></script>
-<script src="app.js?v=18cd552c"></script>
+<script src="app.js?v=73d35bb9"></script>
 </body>
 </html>

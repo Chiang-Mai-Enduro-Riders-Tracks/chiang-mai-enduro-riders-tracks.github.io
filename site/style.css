@@ -35,6 +35,7 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
 .strong { font-weight: 600; }
+[hidden] { display: none !important; }
 
 .top {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -42,6 +43,14 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 }
 .top h1 { font-size: 19px; letter-spacing: -0.01em; }
 .top p { margin: 2px 0 0; font-size: 13px; }
+.brand { min-width: 0; }
+.secnav { flex: none; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg a { padding: 8px 14px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; background: var(--surface-2); white-space: nowrap; }
+.seg a + a { border-left: 1px solid var(--line); }
+.seg a:hover { color: var(--text); }
+.seg a.on { background: var(--accent); color: var(--accent-ink); }
+#secPick { display: none; font-weight: 600; font-size: 14px; padding: 7px 8px; }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -169,6 +178,9 @@ a.back { display: inline-block; text-decoration: none; }
   .panel { width: auto; border-right: 0; order: 0; overflow: visible; }
   .facts { grid-template-columns: repeat(2, 1fr); }
   .top .btn { padding: 8px 10px; font-size: 13px; }
+  .top h1 { font-size: 17px; }
+  .seg { display: none; }
+  #secPick { display: block; }
 }
 
 /* editors page */
