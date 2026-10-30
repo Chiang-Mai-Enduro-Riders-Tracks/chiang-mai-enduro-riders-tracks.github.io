@@ -169,47 +169,61 @@
     map.fitBounds(L.latLngBounds(t.line), { padding: [30, 30] });
   }
 
-  // Neither app has a public "open this link" address, so hand the GPX file to Android's share
-  // sheet (the rider taps Gaia GPS or Locus Map). Where the browser can't share files, download
-  // it and show the import steps for that app instead.
+  // Chrome on Android won't share .gpx files with other apps (not on its Web Share allowlist), so on
+  // Android each button sends an intent link straight to that app. If the app isn't installed or
+  // won't take the link, Chrome loads the fallback: this page with ?noapp=<app>, which shows the
+  // manual steps. Other devices get the download plus the steps.
   const APPS = {
     gaia: {
       name: "Gaia GPS",
+      pkg: "com.trailbehind.android.gaiagps.pro",
       steps: ["Open the downloaded file from the notification or the Files app and choose <b>Gaia GPS</b>.",
         "Or in Gaia: <b>Saved</b> → <b>⋮</b> → <b>Import File</b> → pick the file in Downloads."],
     },
     locus: {
       name: "Locus Map",
+      pkg: "menion.android.locus",
       steps: ["Open the downloaded file from the notification or the Files app and choose <b>Locus Map</b>.",
-        "Or in Locus: <b>Import</b> → <b>Remote file</b> → paste. The track's link is already copied."],
+        "Or in Locus: <b>Import</b> → <b>Remote file</b> → paste the track's link (button below)."],
     },
   };
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const gpxUrl = t => new URL("gpx/" + encodeURIComponent(t.file), location.href);
 
-  async function openInApp(t, key) {
+  function showAppHelp(t, key, intro) {
     const app = APPS[key];
-    const url = new URL("gpx/" + encodeURIComponent(t.file), location.href).href;
     const help = $("appHelp");
-    try {
-      const blob = await (await fetch(url)).blob();
-      const file = new File([blob], t.file, { type: "application/gpx+xml" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: t.name });
-        help.hidden = false;
-        help.innerHTML = `In the list that opened, tap <b>${app.name}</b>.`;
-        return;
-      }
-    } catch (e) {
-      if (e.name === "AbortError") return; // rider closed the share sheet
+    help.hidden = false;
+    help.innerHTML = `${intro}<ul>${app.steps.map(s => `<li>${s}</li>`).join("")}</ul>
+      <div class="actions" style="margin:8px 0 0">
+        <a class="btn" href="${gpxUrl(t).href}" download>Download GPX</a>
+        ${key === "locus" ? `<button class="btn" id="copyGpx">Copy GPX link</button>` : ""}
+      </div>`;
+    const c = $("copyGpx");
+    if (c) c.onclick = async () => {
+      try { await navigator.clipboard.writeText(gpxUrl(t).href); c.textContent = "Copied"; }
+      catch { c.textContent = "Copy failed"; }
+    };
+  }
+
+  function openInApp(t, key) {
+    const app = APPS[key];
+    const url = gpxUrl(t);
+    if (isAndroid) {
+      const back = new URL(location.href);
+      back.search = "?noapp=" + key;
+      back.hash = t.id;
+      location.href = `intent://${url.host}${url.pathname}#Intent;scheme=https;action=android.intent.action.VIEW;` +
+        `type=application/gpx+xml;package=${app.pkg};S.browser_fallback_url=${encodeURIComponent(back.href)};end`;
+      return;
     }
     const a = document.createElement("a");
-    a.href = url;
+    a.href = url.href;
     a.download = t.file;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    if (key === "locus") { try { await navigator.clipboard.writeText(url); } catch {} }
-    help.hidden = false;
-    help.innerHTML = `<b>GPX downloaded.</b> To open it in ${app.name}:<ul>${app.steps.map(s => `<li>${s}</li>`).join("")}</ul>`;
+    showAppHelp(t, key, `<b>GPX downloaded.</b> To open it in ${app.name}:`);
   }
 
   function drawProfile(t) {
@@ -273,4 +287,11 @@
   }
   window.addEventListener("hashchange", route);
   route();
+
+  // Back from a failed "Open in …" intent on Android
+  const noapp = new URLSearchParams(location.search).get("noapp");
+  if (noapp && APPS[noapp] && current) {
+    showAppHelp(current, noapp, `<b>${APPS[noapp].name} couldn't open the track directly</b> (not installed, or it doesn't take links). Do it by hand:`);
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
 })();
