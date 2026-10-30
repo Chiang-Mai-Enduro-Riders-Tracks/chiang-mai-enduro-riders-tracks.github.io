@@ -151,7 +151,15 @@
         <li><b>v${v.version}</b> · ${fmtDate(v.date)} · ${esc(v.by)}<br><span class="muted">${esc(v.note)}</span></li>`).join("")}</ul>
       <p class="muted small">Current file: ${esc(t.file)}${h ? ` (v${h.version})` : ""}.
         Notes last changed ${t.notesUpdated ? fmtDate(t.notesUpdated.date) + " by " + esc(t.notesUpdated.by) : "—"}.</p>
-      <p class="muted small">${esc(site.contribute)}</p>`;
+      <p class="muted small">${esc(site.contribute)}</p>
+      ${site.repo ? `<div class="editbox">
+        <b>Track editors</b> <span class="muted">(Pavel, Jul, Gareth: sign in to GitHub first)</span>
+        <div class="actions" style="margin:8px 0 4px">
+          <a class="btn" href="https://github.com/${site.repo}/upload/main/tracks" target="_blank" rel="noopener">Upload new GPX version</a>
+          <a class="btn" href="https://github.com/${site.repo}/edit/main/tracks/NOTES.txt" target="_blank" rel="noopener">Edit description</a>
+        </div>
+        <span class="muted">Upload with the same file name: <code>${esc(t.file)}</code>. <a href="editors.html">How it works</a></span>
+      </div>` : ""}`;
     $("overview").hidden = true;
     $("detail").hidden = false;
     $("back").onclick = () => go("");

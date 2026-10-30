@@ -6,8 +6,8 @@
   $("owners").textContent = site.owners.join(", ");
   if (site.repo) {
     const base = `https://github.com/${site.repo}`;
-    $("linkTracks").href = `${base}/tree/main/tracks`;
-    $("linkNotes").href = `${base}/blob/main/tracks/NOTES.txt`;
+    $("linkUpload").href = `${base}/upload/main/tracks`;
+    $("linkNotes").href = `${base}/edit/main/tracks/NOTES.txt`;
   } else {
     $("repoMissing").hidden = false;
   }
