@@ -135,7 +135,6 @@
       <div class="actions">
         <a class="btn primary" href="gpx/${encodeURIComponent(t.file)}" download>Download GPX</a>
         <a class="btn" href="${gmaps}" target="_blank" rel="noopener">Directions to start</a>
-        <button class="btn" data-app="gaia">Open in Gaia</button>
         <button class="btn" data-app="locus">Open in Locus</button>
         <button class="btn" id="copy">Copy link</button>
       </div>
@@ -173,15 +172,9 @@
   // Locus accepts an intent link straight from the page; if it isn't installed, Chrome loads the
   // fallback (this page with ?noapp=locus), which shows the manual steps.
   // Gaia ignores every link from a web page (tested 10/30 on Android: intent links, gaiagps.com,
-  // gaiagps://), but it is offered in Android's "Open with" list for a downloaded GPX, so its
-  // button downloads the file and says to open it with Gaia. Apps without `pkg` work that way.
+  // gaiagps://), so it has no button: Gaia riders use Download GPX and pick Gaia in "Open with".
+  // An app entry without `pkg` would get the download-plus-steps treatment instead.
   const APPS = {
-    gaia: {
-      name: "Gaia GPS",
-      steps: ["Tap <b>Open</b> on the download message (or open the file from <b>Downloads</b>).",
-        "Choose <b>Gaia GPS</b>. Leave “Remember my choice” off if you also use Locus.",
-        "No Open button? In Gaia: <b>Saved</b> → <b>⋮</b> → <b>Import File</b> → pick the file in Downloads."],
-    },
     locus: {
       name: "Locus Map",
       pkg: "menion.android.locus",
