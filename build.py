@@ -218,7 +218,7 @@ def commits(pathspec):
         if by != author:
             by = f"{by} (uploaded by {author})"
         if not skip:
-            result.append({"date": date[:10], "by": by, "note": note, "sha": sha[:7]})
+            result.append({"date": date[:10], "when": date, "by": by, "note": note, "sha": sha[:7]})
     return result
 
 
@@ -323,7 +323,7 @@ def main():
         if "tracks/NOTES.txt" in files:
             what = (what + ", track notes") if what else "Track notes"
         changes.append({**c, "what": what or "Site text", "track": ids[0] if len(ids) == 1 else None})
-    changes.sort(key=lambda c: c["date"], reverse=True)
+    changes.sort(key=lambda c: c.get("when", c["date"]), reverse=True)
 
     if os.path.isdir(OUT):
         shutil.rmtree(OUT)

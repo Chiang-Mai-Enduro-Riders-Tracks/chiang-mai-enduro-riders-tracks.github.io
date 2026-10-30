@@ -12,11 +12,11 @@
   document.title = site.title;
   $("title").textContent = site.title;
   $("subtitle").textContent = site.subtitle;
-  // Sections (Easy Enduro, Adventure, …) come from site.json; each track's Category line in NOTES.txt picks one.
+  // Sections come from site.json; each track's Category line in NOTES.txt picks one. The first section is
+  // the main list; the others (Adventure) follow it at the bottom under their own heading.
   const sections = site.sections;
   const sectionOf = id => sections.find(s => s.id === id) || sections[0];
-  const sectionHash = id => (id === sections[0].id ? "" : id);
-  let section = sections[0].id;
+  $("intro").textContent = sections[0].intro;
   $("restricted").textContent = site.restricted;
   $("contribute").textContent = site.contribute;
 
@@ -44,7 +44,7 @@
     g.on("mouseout", () => highlight(t.id, false));
     layers[t.id] = { g, line, casing, start };
   });
-  const boundsOf = sec => L.latLngBounds(tracks.filter(t => t.category === sec).flatMap(t => t.line));
+  const allBounds = L.latLngBounds(tracks.flatMap(t => t.line));
   // A map fitted while its box still has no size zooms all the way in; wait for layout first.
   let fitTimer = null;
   const fitTo = (bounds, pad) => {
@@ -52,9 +52,11 @@
     map.invalidateSize();
     const size = map.getSize();
     if (size.x < 100 || size.y < 100) { fitTimer = setTimeout(() => fitTo(bounds, pad), 100); return; }
-    map.fitBounds(bounds, { padding: [pad, pad] });
+    // no animation: a fit requested while the previous zoom is still animating gets dropped
+    map.stop();
+    map.fitBounds(bounds, { padding: [pad, pad], animate: false });
   };
-  const fitAll = () => fitTo(boundsOf(section), 24);
+  const fitAll = () => fitTo(allBounds, 24);
 
   function highlight(id, on) {
     const card = document.querySelector(`.card[data-id="${id}"]`);
@@ -74,14 +76,8 @@
   const field = (t, key) => (t.fields.find(f => f[0].toLowerCase() === key) || [])[1];
   const hours = t => (field(t, "length") || "").match(/\(([^)]*)\)/)?.[1];
 
-  $("tabs").innerHTML = sections.map(s => {
-    const n = tracks.filter(t => t.category === s.id).length;
-    return `<button class="tab" role="tab" data-sec="${s.id}">${esc(s.title)} <span class="muted">${n}</span></button>`;
-  }).join("");
-  document.querySelectorAll(".tab").forEach(b => b.onclick = () => go(sectionHash(b.dataset.sec)));
-
-  $("list").innerHTML = tracks.map(t => `
-    <li data-sec="${t.category}"><button class="card" data-id="${t.id}">
+  const card = t => `
+    <li><button class="card" data-id="${t.id}">
       <span class="swatch" style="background:${t.color}"></span>
       <span>
         <h3><span class="num">${t.id}</span>${esc(t.name)}</h3>
@@ -95,7 +91,13 @@
         <span class="chips">${t.flags.map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</span>
         <span class="ver" style="display:block">${verLine(t)}</span>
       </span>
-    </button></li>`).join("");
+    </button></li>`;
+  $("list").innerHTML = sections.map((sec, i) => {
+    const ts = tracks.filter(t => t.category === sec.id);
+    if (!ts.length) return "";
+    const head = i ? `<li class="list-head"><h2 class="section">${esc(sec.title)}</h2><p class="sec-intro">${esc(sec.intro)}</p></li>` : "";
+    return head + ts.map(card).join("");
+  }).join("");
   document.querySelectorAll(".card").forEach(c => {
     c.addEventListener("click", () => go(c.dataset.id));
     c.addEventListener("mouseenter", () => highlight(c.dataset.id, true));
@@ -114,21 +116,8 @@
 
   function go(id) { location.hash = id ? "#" + id : ""; }
 
-  // Only the active section's tracks are on the map; a track page keeps its own section's tracks (dimmed).
-  function setSection(sec) {
-    section = sec;
-    for (const t of tracks) {
-      if (t.category === sec) all.addLayer(layers[t.id].g);
-      else all.removeLayer(layers[t.id].g);
-    }
-    document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.sec === sec));
-    document.querySelectorAll("#list > li").forEach(li => { li.hidden = li.dataset.sec !== sec; });
-    $("intro").textContent = sectionOf(sec).intro;
-  }
-
-  function showOverview(sec) {
+  function showOverview() {
     current = null;
-    setSection(sec);
     $("detail").hidden = true;
     $("overview").hidden = false;
     $("profile").hidden = true;
@@ -143,7 +132,6 @@
 
   function showTrack(t) {
     current = t;
-    setSection(t.category);
     for (const [id, l] of Object.entries(layers)) {
       const on = id === t.id;
       l.line.setStyle({ opacity: on ? 1 : 0.25, weight: on ? 5 : 3 });
@@ -156,9 +144,9 @@
     const legalIdx = t.fields.findIndex(f => f[0].toLowerCase() === "legal");
     const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${t.start[0]},${t.start[1]}`;
     $("detail").innerHTML = `
-      <button class="back" id="back">← All ${esc(sectionOf(t.category).title)} tracks</button>
+      <button class="back" id="back">← All tracks</button>
       <div class="detail-head">
-        <div class="muted small">${esc(sectionOf(t.category).title)} · Track ${t.id} · ${dots(t.difficulty)} ${t.difficulty ? t.difficulty + "/5" : ""}</div>
+        <div class="muted small">${t.category !== sections[0].id ? esc(sectionOf(t.category).title) + " · " : ""}Track ${t.id} · ${dots(t.difficulty)} ${t.difficulty ? t.difficulty + "/5" : ""}</div>
         <h2>${esc(t.name)}</h2>
         <div class="chips">${t.flags.map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</div>
       </div>
@@ -211,7 +199,7 @@
       </details>` : `<p class="muted small">${esc(site.contribute)}</p>`}`;
     $("overview").hidden = true;
     $("detail").hidden = false;
-    $("back").onclick = () => go(sectionHash(t.category));
+    $("back").onclick = () => go("");
     $("copy").onclick = async () => {
       try { await navigator.clipboard.writeText(location.href); $("copy").textContent = "Copied"; }
       catch { $("copy").textContent = "Copy failed"; }
@@ -387,8 +375,7 @@
   function route() {
     const id = location.hash.slice(1);
     const t = tracks.find(t => t.id === id);
-    if (t) showTrack(t);
-    else showOverview(sections.some(s => s.id === id) ? id : sections[0].id);
+    if (t) showTrack(t); else showOverview();
   }
   window.addEventListener("hashchange", route);
   route();
