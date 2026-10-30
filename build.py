@@ -89,12 +89,20 @@ def track_stats(pts):
     has_ele = len(eles) > len(pts) * 0.8
     gain = loss = 0.0
     if has_ele:
-        ref = eles[0]
-        for e in eles[1:]:  # 5 m hysteresis keeps GPS noise out of the climb total
-            if e > ref + 5:
+        # Planned routes take elevation from a terrain model, which is bumpy. Resample every 50 m,
+        # smooth over 250 m, then ignore wiggles under 3 m. Gives a conservative estimate.
+        res, nxt = [], 0.0
+        for p, d in zip(pts, cum):
+            if d >= nxt and p[2] is not None:
+                res.append(p[2])
+                nxt = d + 50
+        sm = [sum(res[max(0, i - 2):i + 3]) / len(res[max(0, i - 2):i + 3]) for i in range(len(res))]
+        ref = sm[0]
+        for e in sm[1:]:
+            if e > ref + 3:
                 gain += e - ref
                 ref = e
-            elif e < ref - 5:
+            elif e < ref - 3:
                 loss += ref - e
                 ref = e
     total = cum[-1]
@@ -207,6 +215,8 @@ def commits(pathspec):
             elif not re.match(r"^[\w-]+:\s", line) or not lines:
                 lines.append(line)
         note = lines[0].strip() if lines else "Updated"
+        if by != author:
+            by = f"{by} (uploaded by {author})"
         if not skip:
             result.append({"date": date[:10], "by": by, "note": note, "sha": sha[:7]})
     return result

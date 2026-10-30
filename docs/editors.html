@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Track Editors</title>
+<link rel="stylesheet" href="vendor/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Track editors</h1>
+    <p class="muted">How to update a track. Every change gets a version number, date and name automatically.</p>
+  </div>
+  <a class="btn" href="./">← Back to tracks</a>
+</header>
+
+<div class="page">
+  <p>Editors: <b id="owners"></b>. You need a free GitHub account that's been added to the site.
+    Nothing to install. Everything happens on the GitHub website, on a phone or a computer.</p>
+
+  <h2>1. Check a rider's recording first (optional)</h2>
+  <div class="box">
+    <p class="small muted">Pick the track, then open the GPX a rider sent. Their ride shows in white, and parts more than 50 m off the current track turn red. Nothing is uploaded; this stays on your device.</p>
+    <div class="row">
+      <select id="cmpTrack" aria-label="Track to compare against"></select>
+      <input type="file" id="cmpFile" accept=".gpx,application/gpx+xml">
+    </div>
+    <div id="cmpResult" class="small"></div>
+    <div id="cmpMap"></div>
+  </div>
+
+  <h2>2. Replace a track</h2>
+  <ol>
+    <li>Open the <a id="linkTracks" href="#">tracks folder on GitHub</a>.</li>
+    <li>Click <b>Add file → Upload files</b> and drop in the new GPX.
+      <b>Use exactly the same file name</b> as the old one; that replaces it.</li>
+    <li>In the first box under the files, write one line about what changed, e.g.
+      <code>Reroute around new no off-road sign at km 12</code>.</li>
+    <li>If the change came from someone else's recording, write their name in the second (description) box:
+      <code>By: Somchai</code>. The site then shows "Somchai (uploaded by you)". Otherwise your GitHub name is used.</li>
+    <li>Click <b>Commit changes</b>. The site updates by itself in about 2 minutes, and the version goes up by one (v1 → v2).</li>
+  </ol>
+  <p class="small muted">Difficulty changed, so the file name changes too (e.g. <code>06-2of5-…</code> → <code>06-3of5-…</code>)?
+    Delete the old file in the same folder, then upload the new one. Keep the same number at the start; the number is what links the versions together.</p>
+
+  <h2>3. Change a description</h2>
+  <ol>
+    <li>Open <a id="linkNotes" href="#">NOTES.txt on GitHub</a> and click the pencil (Edit).</li>
+    <li>Edit the text. Keep the dashed lines and the file name above each track. The site reads the description from there.</li>
+    <li>Click <b>Commit changes</b>, with one line about what you changed.</li>
+  </ol>
+
+  <h2>4. Add a new track</h2>
+  <ol>
+    <li>Upload the GPX named with the next number, e.g. <code>08-2of5-Doi-Saket-loop.gpx</code>.</li>
+    <li>Add its section to NOTES.txt in the same format as the others (Difficulty, Notes, Terrain, Length, Wet conditions, Up/downhills, Shaded, and Legal if needed).</li>
+  </ol>
+
+  <h2>5. Undo a mistake</h2>
+  <p>Nothing is ever lost. Every old version stays in the GitHub history. Open the file on GitHub → <b>History</b>, download the older version, and upload it again as above.</p>
+
+  <p class="small muted" id="repoMissing" hidden>The GitHub links above become active once the site's repository is set (<code>repo</code> in <code>tracks/site.json</code>).</p>
+</div>
+
+<script src="vendor/leaflet.min.js"></script>
+<script src="common.js"></script>
+<script src="editors.js"></script>
+</body>
+</html>

@@ -42,7 +42,8 @@
     g.on("mouseout", () => highlight(t.id, false));
     layers[t.id] = { g, line, casing };
   });
-  const fitAll = () => map.fitBounds(all.getBounds(), { padding: [24, 24] });
+  const allBounds = L.latLngBounds(tracks.flatMap(t => t.line));
+  const fitAll = () => map.fitBounds(allBounds, { padding: [24, 24] });
   fitAll();
 
   function highlight(id, on) {
@@ -72,7 +73,7 @@
           <span>${dots(t.difficulty)}</span>
           ${stat("", t.km + " km")}
           ${hours(t) ? stat("", esc(hours(t))) : ""}
-          ${stat("↑", t.climb != null ? t.climb + " m" : null)}
+          ${stat("↑ ≈", t.climb != null ? t.climb + " m" : null)}
           ${stat("", t.loop ? "Loop" : "One way")}
         </span>
         <span class="chips">${t.flags.map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</span>
@@ -137,7 +138,7 @@
       </div>
       <div class="facts">
         <div class="fact"><span>Distance</span><b>${t.km} km</b></div>
-        <div class="fact"><span>Climbing</span><b>${t.climb != null ? t.climb + " m" : "—"}</b></div>
+        <div class="fact"><span>Climbing (est.)</span><b>${t.climb != null ? "≈" + t.climb + " m" : "—"}</b></div>
         <div class="fact"><span>Highest</span><b>${t.maxEle != null ? t.maxEle + " m" : "—"}</b></div>
         <div class="fact"><span>Route</span><b>${t.loop ? "Loop" : "One way"}</b></div>
       </div>
@@ -160,7 +161,7 @@
 
     drawProfile(t);
     map.invalidateSize();
-    map.fitBounds(layers[t.id].line.getBounds(), { padding: [30, 30] });
+    map.fitBounds(L.latLngBounds(t.line), { padding: [30, 30] });
   }
 
   function drawProfile(t) {
