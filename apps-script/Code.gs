@@ -6,6 +6,9 @@
  * himself. Nothing a rider sends reaches the site directly. Nothing is stored: the email is the
  * record (a copy stays in the setup account's Sent folder). The script only needs "send email".
  *
+
+ * Keep the email text plain ASCII: Gmail garbles characters like arrows in these plain-text mails.
+ *
  * Setup (script.google.com, signed in to the Google account that should own the inbox):
  *   1. New project, paste this file, set NOTIFY_TO below.
  *   2. Deploy → New deployment → type "Web app" → Execute as: Me → Who has access: Anyone → Deploy.
@@ -47,7 +50,7 @@ function doPost(e) {
       ``,
       `Their GPX${photo ? " and photo are" : " is"} attached.`,
       ``,
-      `To review: open ${SITE}editors.html → "Check a rider's recording", pick the track and open the attached GPX.`,
+      `To review: open ${SITE}editors.html, go to "Check a rider's recording", pick the track and open the attached GPX.`,
       `To publish: upload the corrected GPX on GitHub (same file name) and write "By: ${name}" in the description box.`,
       ``,
       `Track page: ${SITE}#${trackId}`,
