@@ -296,12 +296,17 @@ def main():
         for i, h in enumerate(history):
             h["version"] = i + 1
         notes_hist = commits("tracks/NOTES.txt")
+        category = fd.get("category", "").strip().rstrip(".").lower() or "enduro"
+        if category not in {sec["id"] for sec in site.get("sections", [])}:
+            warn(f"{fn}: unknown Category '{category}' in NOTES.txt, showing it under the first section")
+            category = site["sections"][0]["id"] if site.get("sections") else "enduro"
         tracks.append({
             "id": tid,
+            "category": category,
             "file": fn,
             "name": track_name(fn),
             "difficulty": diff,
-            "fields": [f for f in fields if f[0].lower() != "difficulty"],
+            "fields": [f for f in fields if f[0].lower() not in ("difficulty", "category")],
             "flags": flags(fields),
             "history": history,
             "notesUpdated": notes_hist[-1] if notes_hist else (seed.get("notes") or [None])[-1],

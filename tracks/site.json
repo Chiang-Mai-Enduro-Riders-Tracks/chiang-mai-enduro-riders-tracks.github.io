@@ -1,7 +1,6 @@
 {
   "title": "Chiang Mai Enduro Riders Tracks",
   "subtitle": "Beginner-friendly enduro GPX routes around Chiang Mai",
-  "intro": "Easy GPS tracks for beginners. All are outside national parks and not restricted, except the Mae Khanin river loop, which is closed during smoke season.",
   "restricted": "Please ride these community tracks instead of Doi Suthep or Hang Dong, which are restricted areas.",
   "contribute": "Found a change on a track? Open the track and use \"Send it to us\".",
   "owners": [
@@ -9,5 +8,17 @@
     "Chu"
   ],
   "repo": "Chiang-Mai-Enduro-Riders-Tracks/chiang-mai-enduro-riders-tracks.github.io",
-  "submitUrl": "https://script.google.com/macros/s/AKfycbyFrBDhAARPfLQ-m7ILGMDTfW5QtEEY9v6pYqta9nB76e0dH2heKeFIC-TXQfBK5pM0Ww/exec"
+  "submitUrl": "https://script.google.com/macros/s/AKfycbyFrBDhAARPfLQ-m7ILGMDTfW5QtEEY9v6pYqta9nB76e0dH2heKeFIC-TXQfBK5pM0Ww/exec",
+  "sections": [
+    {
+      "id": "enduro",
+      "title": "Easy Enduro",
+      "intro": "Easy GPS tracks for beginners. All are outside national parks and not restricted, except the Mae Khanin river loop, which is closed during smoke season."
+    },
+    {
+      "id": "adventure",
+      "title": "Adventure",
+      "intro": "Longer rides on small village roads, mostly concrete with some dirt, through remote hill-tribe villages. Plan a full day."
+    }
+  ]
 }

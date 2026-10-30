@@ -101,6 +101,7 @@ Shade: 70% shaded.
 07-2of5-Chiang-Mai-to-Pai.gpx
 ----------------------------------------------------
 Difficulty: 2/5.
+Category: Adventure
 Notes: This is a much more fun (but much longer) way to go to Pai by taking small village roads (mostly concrete with some offroad). The track passes through several hill-tribe villages and has beautiful vistas. But there is one (short-ish) challenging section (single up/down hill with deep ruts), were you might need assistance. The track will take you a full day of riding even at a good pace, so start early.
 
 Terrain: 5% single (intermediate uphill), 25% double (easy-medium dirt), 40% concrete, 30% tarmac.
