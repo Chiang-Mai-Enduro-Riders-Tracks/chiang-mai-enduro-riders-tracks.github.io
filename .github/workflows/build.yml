@@ -6,7 +6,7 @@ name: Build site
 on:
   push:
     branches: [main]
-    paths: ["tracks/**", "site/**", "build.py"]
+    paths: ["tracks/**", "site/**", "build.py", "surfaces.py"]
   workflow_dispatch:
 
 permissions:
@@ -28,6 +28,6 @@ jobs:
         run: |
           git config user.name "site-builder"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs
+          git add docs tracks/surface-cache.json
           git diff --cached --quiet || git commit -m "Rebuild site"
           git push

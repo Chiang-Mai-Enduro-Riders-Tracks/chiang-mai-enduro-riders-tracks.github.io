@@ -151,6 +151,24 @@
   // ---------- detail ----------
   let current = null;
   let hoverMarker = null;
+  // Track page: the open track drawn in surface colours (from OpenStreetMap, see surfaces.py).
+  const SURFACES = [
+    ["single", "Single track", "#e5397a"],
+    ["double", "Double track / dirt", "#ff9800"],
+    ["paved", "Paved", "#f4f4f4"],
+    ["unknown", "Not on the map", "#8a8f98"],
+  ];
+  const surfaceColor = Object.fromEntries(SURFACES.map(([k, , c]) => [k, c]));
+  let surfaceLayer = null;
+  const clearSurface = () => { if (surfaceLayer) { surfaceLayer.remove(); surfaceLayer = null; } };
+  const surfaceKey = t => {
+    const sh = t.surface.shares;
+    const used = SURFACES.filter(([k]) => sh[k] > 0);
+    return `<h2 class="section">Surface</h2>
+      <div class="surfbar" aria-hidden="true">${used.map(([k, , c]) => `<span style="flex:${sh[k]};background:${c}"></span>`).join("")}</div>
+      <ul class="surfkey">${used.map(([k, label, c]) => `<li><i style="background:${c}"></i>${label} <b>${sh[k]}%</b></li>`).join("")}</ul>
+      <p class="muted small">From OpenStreetMap, so it can be out of date. The notes above are the riders' own word.</p>`;
+  };
 
   function go(id) { location.hash = id ? "#" + id : ""; }
 
@@ -163,6 +181,7 @@
     $("overview").hidden = false;
     $("profile").hidden = true;
     if (hoverMarker) { hoverMarker.remove(); hoverMarker = null; }
+    clearSurface();
     for (const l of Object.values(layers)) {
       l.line.setStyle({ opacity: 0.95, weight: 4 });
       l.casing.setStyle({ opacity: 0.55 });
@@ -181,6 +200,16 @@
       l.start.setStyle({ opacity: on ? 1 : 0.25, fillOpacity: on ? 1 : 0.25 });
     }
     layers[t.id].g.bringToFront();
+    clearSurface();
+    if (t.surface) {
+      layers[t.id].line.setStyle({ opacity: 0 });
+      surfaceLayer = L.featureGroup(t.surface.pieces.flatMap(p => [
+        L.polyline(p.line, { color: "#000", weight: 8, opacity: 0.75, interactive: false }),
+        L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, interactive: false,
+                             dashArray: p.cls === "unknown" ? "6 6" : null }),
+      ])).addTo(map);
+      layers[t.id].start.bringToFront();
+    }
 
     const h = latest(t);
     const legalIdx = t.fields.findIndex(f => f[0].toLowerCase() === "legal");
@@ -204,6 +233,7 @@
         <div class="fact"><span>Route</span><b>${t.loop ? "Loop" : "One way"}</b></div>
       </div>
       <dl class="desc">${t.fields.map((f, i) => `<dt>${esc(f[0])}</dt><dd class="${i === legalIdx ? "legal" : ""}">${esc(f[1])}</dd>`).join("")}</dl>
+      ${t.surface ? surfaceKey(t) : ""}
       <h2 class="section">Version history</h2>
       <ul class="history">${[...t.history].reverse().map(v => `
         <li><b>v${v.version}</b> · ${fmtDate(v.date)} · ${esc(v.by)}<br><span class="muted">${esc(v.note)}</span></li>`).join("")}</ul>

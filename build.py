@@ -15,6 +15,8 @@ import subprocess
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
+
+import surfaces
 from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -133,6 +135,8 @@ def track_stats(pts):
 # ---------- missing elevation ----------
 
 ELE_CACHE = os.path.join(TRACKS, "elevation-cache.json")
+SURFACE_CACHE = os.path.join(TRACKS, "surface-cache.json")
+PAVED = {"tarmac": "paved", "concrete": "paved"}  # the map often says just "paved", so one colour, like the notes
 
 
 def fill_elevation(pts, fn):
@@ -304,6 +308,27 @@ def flags(fields):
     return out
 
 
+def surface_pieces(pts, runs):
+    """Cut the drawn (simplified) line into pieces by surface class. runs = [{from, to, cls}] in km."""
+    cum = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        cum.append(cum[-1] + haversine(a, b))
+    pieces, j = [], 0
+    for i in simplify(pts):
+        km = cum[i] / 1000
+        while j < len(runs) - 1 and km > runs[j]["to"]:
+            j += 1
+        cls = PAVED.get(runs[j]["cls"], runs[j]["cls"])
+        pt = [round(pts[i][0], 5), round(pts[i][1], 5)]
+        if pieces and pieces[-1]["cls"] == cls:
+            pieces[-1]["line"].append(pt)
+        else:
+            if pieces:
+                pieces[-1]["line"].append(pt)  # pieces share their joining point, so the line has no gaps
+            pieces.append({"cls": cls, "line": [pt]})
+    return [p for p in pieces if len(p["line"]) > 1]
+
+
 def main():
     with open(os.path.join(TRACKS, "site.json")) as f:
         site = json.load(f)
@@ -313,6 +338,7 @@ def main():
     with open(notes_path, encoding="utf-8") as f:
         header, sections = parse_notes(f.read())
 
+    surface_cache = json.load(open(SURFACE_CACHE)) if os.path.exists(SURFACE_CACHE) else {}
     gpx_files = sorted(f for f in os.listdir(TRACKS) if f.lower().endswith(".gpx"))
     tracks = []
     for fn in gpx_files:
@@ -325,6 +351,15 @@ def main():
         if len(pts) < 2:
             warn(f"{fn}: no track points found")
             continue
+        surface = None
+        try:
+            runs = surfaces.surfaces_for(pts, surface_cache)["runs"]
+            sh = surfaces.shares(runs)
+            surface = {"pieces": surface_pieces(pts, runs),
+                       "shares": {"single": sh["single"], "double": sh["double"],
+                                  "paved": sh["tarmac"] + sh["concrete"], "unknown": sh["unknown"]}}
+        except Exception as e:  # OpenStreetMap busy: build without colours, try again next build
+            warn(f"{fn}: no surface colours this time ({e})")
         filled = False
         if sum(p[2] is not None for p in pts) < len(pts) * 0.8:
             filled = fill_elevation(pts, fn)
@@ -368,6 +403,7 @@ def main():
             "id": tid,
             "category": category,
             "eleFromTerrain": filled,
+            "surface": surface,
             "file": fn,
             "name": track_name(fn),
             "difficulty": diff,
@@ -388,11 +424,16 @@ def main():
         else:
             rules[sec["id"]] = header
 
+    with open(SURFACE_CACHE, "w") as f:
+        json.dump(surface_cache, f, separators=(",", ":"))
+
     # site-wide change log, newest first
     # only real changes since the site started; the Drive versions are v1 history, not "updates"
     changes = []
     for c in commits("tracks/"):
-        files = git("show", "--name-only", "--format=", c["sha"]).split()
+        files = [f for f in git("show", "--name-only", "--format=", c["sha"]).split() if not f.endswith("-cache.json")]
+        if not any(f.startswith("tracks/") for f in files):
+            continue  # only the lookup caches changed: nothing a rider would call an update
         ids = sorted({m.group(1) for f in files if (m := re.match(r"tracks/(\d+)-", f))})
         what = ", ".join(next((t["name"] for t in tracks if t["id"] == i), i) for i in ids)
         if "tracks/NOTES.txt" in files:

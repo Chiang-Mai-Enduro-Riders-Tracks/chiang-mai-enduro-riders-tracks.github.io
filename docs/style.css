@@ -194,3 +194,8 @@ a.back { display: inline-block; text-decoration: none; }
 select, input[type=file] { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px; max-width: 100%; }
 #cmpMap { isolation: isolate; height: 420px; border-radius: var(--radius); margin-top: 12px; border: 1px solid var(--line); }
 #cmpResult { margin-top: 10px; }
+
+/* track page: surface share bar + key */
+.surfbar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid #000; margin: 6px 0 8px; }
+.surfkey { list-style: none; padding: 0; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+.surfkey i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #000; margin-right: 6px; vertical-align: -1px; }
