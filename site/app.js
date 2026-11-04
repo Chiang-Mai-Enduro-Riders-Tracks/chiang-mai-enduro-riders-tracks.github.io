@@ -72,7 +72,7 @@
     if (card) card.classList.toggle("hl", on);
     const l = layers[id];
     if (l && !current) l.line.setStyle({ weight: on ? 7 : 4 });
-    if (l && on) l.g.bringToFront();
+    if (l && on && !current) l.g.bringToFront();  // on a track page this would cover the surface colours
   }
 
   // ---------- list ----------
