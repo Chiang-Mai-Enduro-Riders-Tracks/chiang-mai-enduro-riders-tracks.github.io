@@ -114,13 +114,23 @@ Shaded: 20% shaded.
 08-1of5-Mae-Wang.gpx
 ----------------------------------------------------
 Difficulty: 1/5.
-Notes: Description coming soon.
+Notes: Easy loop through the hills of Mae Wang, starting and ending at Ban Sop Win. Paved road (4016) for the first 7 km, then long dirt sections, much of it laterite, past Ban Huai Yao, Ban Huai Sai and Ban Ma O, the highest point (about 1,150 m at km 43). A few short single-track bits around km 45-48, then back down past Ban Huay Yuak. (Written from map data, waiting for a rider's check.)
+
+Terrain: 38% paved (mostly tarmac, some concrete), 61% double (dirt, a lot of it laterite), 1% single (short bits).
+Length: 63km (4-5 hours).
+Wet conditions: slippery: laterite (pig skin) at km 8-22 and km 41-47. Steep downhill at km 55-57.
+Up/downhills: hilly, about 1,800 m of climbing. Long climb from km 7, highest point at km 43.
 
 
 ----------------------------------------------------
 09-1of5-Samoeng-North.gpx
 ----------------------------------------------------
 Difficulty: 1/5.
-Notes: Description coming soon.
+Notes: Easy ride around Mae Sap in Samoeng, from Ban Mae Pa, ending at Ban Pongkwaw, 3 km from the start. Mostly small paved village roads and road 4067, with dirt sections at km 20-23 and km 47-52. Highest point is Ban Khun Om Long (about 1,230 m at km 46), then a steep concrete descent around km 56 to Ban Na Ku. (Written from map data, waiting for a rider's check.)
+
+Terrain: 85% paved (tarmac and concrete), 15% double (dirt).
+Length: 77km (4-5 hours).
+Wet conditions: mostly paved, but slippery on the short laterite (pig skin) bit at km 50-52 and on the steep concrete at km 56.
+Up/downhills: hilly, about 2,200 m of climbing. Steep climb at km 44-46.
 
 
