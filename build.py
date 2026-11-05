@@ -297,18 +297,18 @@ def flags(fields):
     d = {k.lower(): v for k, v in fields}
     out = []
     if "smoke" in d.get("legal", "").lower():
-        out.append({"level": "warn", "text": "Part closed in smoke season"})
+        out.append({"kind": "legal", "level": "warn", "text": "Part closed in smoke season"})
     wet = d.get("wet conditions", "").lower()
     if "problematic" in wet:
-        out.append({"level": "warn", "text": "Hard when wet"})
+        out.append({"kind": "wet", "level": "warn", "text": "Hard when wet"})
     elif wet.startswith("medium") or "slippery" in wet:
-        out.append({"level": "mid", "text": "Slippery when wet"})
+        out.append({"kind": "wet", "level": "mid", "text": "Slippery when wet"})
     elif wet:
-        out.append({"level": "ok", "text": "OK when wet"})
+        out.append({"kind": "wet", "level": "ok", "text": "OK when wet"})
     return out
 
 
-def surface_pieces(pts, runs):
+def surface_pieces(pts, runs, cls_of=lambda r: PAVED.get(r["cls"], r["cls"])):
     """Cut the drawn (simplified) line into pieces by surface class. runs = [{from, to, cls}] in km."""
     cum = [0.0]
     for a, b in zip(pts, pts[1:]):
@@ -318,7 +318,7 @@ def surface_pieces(pts, runs):
         km = cum[i] / 1000
         while j < len(runs) - 1 and km > runs[j]["to"]:
             j += 1
-        cls = PAVED.get(runs[j]["cls"], runs[j]["cls"])
+        cls = cls_of(runs[j])
         pt = [round(pts[i][0], 5), round(pts[i][1], 5)]
         if pieces and pieces[-1]["cls"] == cls:
             pieces[-1]["line"].append(pt)
@@ -358,6 +358,11 @@ def main():
             surface = {"pieces": surface_pieces(pts, runs),
                        "shares": {"single": sh["single"], "double": sh["double"],
                                   "paved": sh["tarmac"] + sh["concrete"], "unknown": sh["unknown"]}}
+            # laterite is drawn on top of the surface colours, and only where the map knows it
+            lat = surfaces.laterite_share(runs)
+            if lat:
+                surface["laterite"] = [p["line"] for p in surface_pieces(pts, runs, lambda r: r["laterite"]) if p["cls"]]
+                surface["lateriteShare"] = lat
         except Exception as e:  # OpenStreetMap busy: build without colours, try again next build
             warn(f"{fn}: no surface colours this time ({e})")
         filled = False

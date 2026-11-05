@@ -1,9 +1,10 @@
 """Surface along each track, from OpenStreetMap road tags (standard library only).
 
-Every ~20 m of track is matched to the nearest mapped road within 25 m, and that road's tags decide the class:
-single (paths), double (dirt tracks and dirt roads), concrete, tarmac, or unknown (no surface on the map).
-Results are cached in tracks/surface-cache.json, keyed by the track's shape, so rebuilds don't hit Overpass;
-delete the cache (or a track's entry) to pick up new OpenStreetMap edits.
+Every ~20 m of track is matched to the nearest mapped road within 25 m, and that road's tags decide the class.
+Jul's rule: paved if the surface is a paved one, or tracktype=grade1, or smoothness is excellent/good;
+otherwise unpaved: single on paths, double on everything else. unknown = no mapped road near the track.
+The cache (tracks/surface-cache.json, keyed by the track's shape) keeps the matched road tags, not the classes,
+so a rule change needs no new download; delete a track's entry to pick up new OpenStreetMap edits.
 """
 import hashlib
 import json
@@ -13,33 +14,34 @@ import time
 import urllib.parse
 import urllib.request
 
-OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter"]
+OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
 STEP_M = 20       # sample spacing along the track
 SNAP_M = 25       # max distance from a GPS point to a mapped road
 CLASSES = ["single", "double", "concrete", "tarmac", "unknown"]
 
 TARMAC = {"asphalt", "paved", "chipseal"}
-CONCRETE = {"concrete", "concrete:plates", "concrete:lanes", "paving_stones", "sett", "cobblestone"}
-LOOSE = {"unpaved", "compacted", "fine_gravel", "gravel", "pebblestone", "rock", "dirt", "earth", "ground",
-         "mud", "sand", "clay", "grass", "grass_paver", "woodchips"}
+CONCRETE = {"concrete", "concrete:plates", "concrete:lanes", "paving_stones", "sett", "cobblestone", "metal", "wood"}
 PATHS = {"path", "footway", "bridleway", "cycleway", "steps"}
+MAIN_ROADS = {"motorway", "trunk", "primary", "secondary", "tertiary",
+              "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link"}
+KEYS = ("highway", "surface", "tracktype", "smoothness")  # the tags kept in the cache
 
 
 def classify(tags):
     """OpenStreetMap tags of one road → (class, rough). rough = Jul's smoothness tag says bad or worse."""
+    if not tags:
+        return "unknown", False
     hw = tags.get("highway", "")
     surface = tags.get("surface", "").split(";")[0].strip()
     rough = tags.get("smoothness", "") in {"bad", "very_bad", "horrible", "very_horrible", "impassable"}
-    if hw in PATHS:
-        cls = "single"
-    elif surface in TARMAC:
+    if surface in TARMAC or (not surface and hw in MAIN_ROADS):  # main roads without a surface tag are tarmac
         cls = "tarmac"
-    elif surface in CONCRETE:
+    elif surface in CONCRETE or tags.get("tracktype") == "grade1" or tags.get("smoothness") in {"excellent", "good"}:
         cls = "concrete"
-    elif surface in LOOSE or (hw == "track" and tags.get("tracktype", "") in {"grade2", "grade3", "grade4", "grade5"}):
+    elif hw in PATHS:
+        cls = "single"
+    else:  # laterite, dirt, gravel, or no surface tag at all
         cls = "double"
-    else:
-        cls = "unknown"
     return cls, rough
 
 
@@ -96,44 +98,57 @@ def _overpass(samples):
 
 
 def match(pts, ways):
-    """pts = [(lat, lon, ...)], ways = Overpass elements → list of runs [{from, to, cls, rough}] in km."""
+    """pts = [(lat, lon, ...)], ways = Overpass elements → runs [{from, to, tags}] in km ({} = no road nearby)."""
     samples = _resample(pts, STEP_M)
     lat0 = samples[0][0]
     cell = 100.0
     grid = {}
     for w in ways:
-        cls, rough = classify(w.get("tags", {}))
+        tags = {k: v for k, v in w.get("tags", {}).items() if k in KEYS}
         g = [_xy(n["lat"], n["lon"], lat0) for n in w.get("geometry", []) if n]
         for a, b in zip(g, g[1:]):
             x0, x1 = sorted((a[0], b[0])); y0, y1 = sorted((a[1], b[1]))
             for gx in range(int((x0 - SNAP_M) // cell), int((x1 + SNAP_M) // cell) + 1):
                 for gy in range(int((y0 - SNAP_M) // cell), int((y1 + SNAP_M) // cell) + 1):
-                    grid.setdefault((gx, gy), []).append((a, b, cls, rough))
+                    grid.setdefault((gx, gy), []).append((a, b, tags))
     runs = []
     for la, lo, km in samples:
         p = _xy(la, lo, lat0)
-        best = (SNAP_M, "unknown", False)
-        for a, b, cls, rough in grid.get((int(p[0] // cell), int(p[1] // cell)), ()):
+        best = (SNAP_M, {})
+        for a, b, tags in grid.get((int(p[0] // cell), int(p[1] // cell)), ()):
             d = _seg_dist(p, a, b)
             if d < best[0]:
-                best = (d, cls, rough)
-        _, cls, rough = best
-        if runs and runs[-1]["cls"] == cls and runs[-1]["rough"] == rough:
+                best = (d, tags)
+        tags = best[1]
+        if runs and runs[-1]["tags"] == tags:
             runs[-1]["to"] = km
         else:
             if runs:
                 runs[-1]["to"] = km
-            runs.append({"from": km, "to": km, "cls": cls, "rough": rough})
-    # fold away blips shorter than 60 m (junctions, GPS wobble) into the run before
+            runs.append({"from": km, "to": km, "tags": tags})
+    for r in runs:
+        r["from"], r["to"] = round(r["from"], 3), round(r["to"], 3)
+    return runs
+
+
+def classified(runs):
+    """Tag runs → [{from, to, cls, rough, laterite}]; blips shorter than 60 m (junctions, GPS wobble) fold into the run before.
+    laterite = the map says pig skin (slippery when wet); only where someone tagged it, so no laterite proves nothing."""
     out = []
     for r in runs:
-        if out and (r["to"] - r["from"] < 0.06 or (out[-1]["cls"] == r["cls"] and out[-1]["rough"] == r["rough"])):
-            out[-1]["to"] = r["to"]
+        cls, rough = classify(r["tags"])
+        lat = r["tags"].get("surface", "").split(";")[0].strip() == "laterite"
+        prev = out[-1] if out else None
+        if prev and (r["to"] - r["from"] < 0.06 or (prev["cls"], prev["rough"], prev["laterite"]) == (cls, rough, lat)):
+            prev["to"] = r["to"]
         else:
-            out.append(r)
-    for r in out:
-        r["from"], r["to"] = round(r["from"], 3), round(r["to"], 3)
+            out.append({"from": r["from"], "to": r["to"], "cls": cls, "rough": rough, "laterite": lat})
     return out
+
+
+def laterite_share(runs):
+    total = sum(r["to"] - r["from"] for r in runs) or 1
+    return round(100 * sum(r["to"] - r["from"] for r in runs if r["laterite"]) / total)
 
 
 def shares(runs):
@@ -142,9 +157,9 @@ def shares(runs):
 
 
 def surfaces_for(pts, cache, key_extra=""):
-    """Cached per track shape. pts = [(lat, lon, ...)]."""
+    """Cached per track shape. pts = [(lat, lon, ...)] → {"runs": [{from, to, cls, rough}], "fetched"}."""
     key = hashlib.sha1((key_extra + "".join(f"{p[0]:.5f},{p[1]:.5f};" for p in pts)).encode()).hexdigest()[:16]
-    if key not in cache:
+    if key not in cache or "tags" not in cache[key]["runs"][0]:  # older caches kept classes, not tags
         samples = _resample(pts, STEP_M)
         cache[key] = {"runs": match(pts, _overpass(samples)), "fetched": time.strftime("%Y-%m-%d")}
-    return cache[key]
+    return {"runs": classified(cache[key]["runs"]), "fetched": cache[key]["fetched"]}

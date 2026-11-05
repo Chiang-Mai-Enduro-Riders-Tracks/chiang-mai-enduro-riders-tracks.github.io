@@ -85,6 +85,13 @@
   const field = (t, key) => (t.fields.find(f => f[0].toLowerCase() === key) || [])[1];
   const hours = t => (field(t, "length") || "").match(/\(([^)]*)\)/)?.[1];
 
+  // Main list: paved vs off-road at a glance (Pavel); the full breakdown and wet conditions are on the track page.
+  // Off-road = single + double + the bits not on the map (usually trails).
+  const surfaceChip = t => {
+    if (!t.surface) return "";
+    const paved = t.surface.shares.paved;
+    return `<span class="chip">Paved ${paved}% · Off-road ${100 - paved}%</span>`;
+  };
   const card = t => `
     <li><button class="card" data-id="${t.id}">
       <span class="swatch" style="background:${t.color}"></span>
@@ -97,7 +104,7 @@
           ${stat("↑ ≈", t.climb != null ? t.climb + " m" : null)}
           ${stat("", t.loop ? "Loop" : "One way")}
         </span>
-        <span class="chips">${t.flags.map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</span>
+        <span class="chips">${surfaceChip(t)}${t.flags.filter(f => f.kind === "legal").map(f => `<span class="chip ${f.level}">${esc(f.text)}</span>`).join("")}</span>
         <span class="ver" style="display:block">${verLine(t)}</span>
       </span>
     </button></li>`;
@@ -158,6 +165,7 @@
     ["paved", "Paved", "#f4f4f4"],
     ["unknown", "Not on the map", "#8a8f98"],
   ];
+  const LATERITE = "#7a1408";
   const surfaceColor = Object.fromEntries(SURFACES.map(([k, , c]) => [k, c]));
   let surfaceLayer = null;
   const clearSurface = () => { if (surfaceLayer) { surfaceLayer.remove(); surfaceLayer = null; } };
@@ -167,6 +175,8 @@
     return `<h2 class="section">Surface</h2>
       <div class="surfbar" aria-hidden="true">${used.map(([k, , c]) => `<span style="flex:${sh[k]};background:${c}"></span>`).join("")}</div>
       <ul class="surfkey">${used.map(([k, label, c]) => `<li><i style="background:${c}"></i>${label} <b>${sh[k]}%</b></li>`).join("")}</ul>
+      ${t.surface.lateriteShare ? `<p class="laterite"><i></i>Laterite (pig skin), slippery when wet <b>${t.surface.lateriteShare}%</b><br>
+        <span class="muted small">Marked only where the map knows it. Other parts may be laterite too.</span></p>` : ""}
       <p class="muted small">From OpenStreetMap, so it can be out of date. The notes above are the riders' own word.</p>`;
   };
 
@@ -207,7 +217,9 @@
         L.polyline(p.line, { color: "#000", weight: 8, opacity: 0.75, interactive: false }),
         L.polyline(p.line, { color: surfaceColor[p.cls], weight: 5, opacity: 1, interactive: false,
                              dashArray: p.cls === "unknown" ? "6 6" : null }),
-      ])).addTo(map);
+      ]).concat((t.surface.laterite || []).map(line =>  // laterite: dashes over the surface colour
+        L.polyline(line, { color: LATERITE, weight: 5, opacity: 1, interactive: false, dashArray: "4 8", lineCap: "butt" })
+      ))).addTo(map);
       layers[t.id].start.bringToFront();
     }
 
